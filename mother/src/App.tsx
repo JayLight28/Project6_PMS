@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
-  Plus,
   Search,
   Anchor,
   Activity,
@@ -17,25 +16,46 @@ interface Vessel {
   vessel_id: string; // IMO Number
   last_sync_at: string | null;
   status: 'online' | 'offline';
-}
-
-interface Template {
-  id: number;
-  name: string;
-  version: number;
-  updated_at: string;
+  pendingReports: number;
+  isSyncDelayed: boolean;
+  ip_address?: string;
+  port?: number;
 }
 
 function App() {
   const [view, setView] = useState<'dashboard' | 'sms' | 'pms' | 'sync'>('dashboard');
-  const [vessels, setVessels] = useState<Vessel[]>([
-    { id: 1, vessel_name: 'MV PACIFIC GLORY', vessel_id: 'IMO 9123456', last_sync_at: '2026-04-01 10:00', status: 'online' },
-    { id: 2, vessel_name: 'MV ATLANTIC STAR', vessel_id: 'IMO 9876543', last_sync_at: '2026-03-30 15:30', status: 'offline' }
-  ]);
+  const [vessels, setVessels] = useState<Vessel[]>([]);
+  const [stats, setStats] = useState({ fleetSize: 0, activeAlerts: 0, pendingReviews: 0, syncHealth: 0 });
+  const [loading, setLoading] = useState(true);
+
+  // Fetch data from API
+  useEffect(() => {
+    fetchVessels();
+    fetchStats();
+  }, []);
+
+  const fetchVessels = async () => {
+    try {
+      const resp = await fetch('http://localhost:3001/api/fleet');
+      const data = await resp.json();
+      setVessels(data.map((v: any) => ({
+        ...v,
+        status: Math.random() > 0.3 ? 'online' : 'offline'
+      })));
+    } catch (err) { console.error(err); }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const resp = await fetch('http://localhost:3001/api/dashboard/stats');
+      const data = await resp.json();
+      setStats(data);
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
+  };
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
-  const [templates, setTemplates] = useState<Template[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newVessel, setNewVessel] = useState({ vessel_name: '', vessel_id: '' });
+  const [newVessel, setNewVessel] = useState({ vessel_name: '', vessel_id: '', ip_address: '', port: '3002' });
 
   const handleSelectVessel = (vessel: Vessel | null) => {
     setSelectedVessel(vessel);
@@ -44,18 +64,38 @@ function App() {
     }
   };
 
-  const handleAddVessel = () => {
+  const handleAddVessel = async () => {
     if (!newVessel.vessel_name || !newVessel.vessel_id) return;
-    const vessel: Vessel = {
-      id: Date.now(),
-      vessel_name: newVessel.vessel_name,
-      vessel_id: newVessel.vessel_id,
-      last_sync_at: null,
-      status: 'online'
-    };
-    setVessels([...vessels, vessel]);
-    setNewVessel({ vessel_name: '', vessel_id: '' });
-    setIsModalOpen(false);
+    
+    try {
+      const resp = await fetch('http://localhost:3001/api/fleet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newVessel,
+          port: parseInt(newVessel.port) || 3002
+        })
+      });
+      
+      if (resp.ok) {
+        fetchVessels();
+        setNewVessel({ vessel_name: '', vessel_id: '', ip_address: '', port: '3002' });
+        setIsModalOpen(false);
+      }
+    } catch (err) {
+      console.error("Failed to add vessel:", err);
+    }
+  };
+
+  const handlePushTemplates = async (vessel_id: string) => {
+    if (!confirm(`Push all SMS/PMS templates to ${vessel_id}?`)) return;
+    try {
+      const res = await fetch(`http://localhost:3001/api/fleet/${vessel_id}/push-templates`, { method: 'POST' });
+      const data = await res.json();
+      alert(data.success ? 'Templates pushed successfully.' : `Error: ${data.error}`);
+    } catch {
+      alert('Failed to reach vessel. Check IP address and network.');
+    }
   };
 
   return (
@@ -75,19 +115,19 @@ function App() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '1.25rem' }}>
             <div className="glass-card">
               <p style={{ color: 'var(--text-dim)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Fleet Size</p>
-              <h3 style={{ fontSize: '2rem' }}>{vessels.length}</h3>
+              <h3 style={{ fontSize: '2rem' }}>{stats.fleetSize}</h3>
             </div>
             <div className="glass-card">
               <p style={{ color: 'var(--text-dim)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Active Alerts</p>
-              <h3 style={{ fontSize: '2rem', color: 'var(--danger)' }}>14</h3>
+              <h3 style={{ fontSize: '2rem', color: 'var(--danger)' }}>{stats.activeAlerts}</h3>
             </div>
             <div className="glass-card">
               <p style={{ color: 'var(--text-dim)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Pending Reviews</p>
-              <h3 style={{ fontSize: '2rem', color: 'var(--warning)' }}>8</h3>
+              <h3 style={{ fontSize: '2rem', color: 'var(--warning)' }}>{stats.pendingReviews}</h3>
             </div>
             <div className="glass-card">
               <p style={{ color: 'var(--text-dim)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Avg Sync Health</p>
-              <h3 style={{ fontSize: '2rem', color: 'var(--success)' }}>94%</h3>
+              <h3 style={{ fontSize: '2rem', color: 'var(--success)' }}>{stats.syncHealth}%</h3>
             </div>
           </div>
 
@@ -111,20 +151,39 @@ function App() {
                 </tr>
               </thead>
               <tbody>
-                {vessels.map(v => (
-                  <tr key={v.id}>
-                    <td style={{ fontWeight: 600 }}>{v.vessel_name}</td>
-                    <td style={{ color: 'var(--text-dim)' }}>{v.vessel_id}</td>
-                    <td>{v.last_sync_at || 'Never'}</td>
-                    <td><span style={{ color: 'var(--success)' }}>On Schedule</span></td>
-                    <td>2 Pending</td>
-                    <td>
-                      <button className="btn-secondary" style={{ padding: '0.5rem 1rem' }} onClick={() => handleSelectVessel(v)}>
-                        Open Mimic
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {loading ? (
+                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '3rem' }}>Fetching fleet registry...</td></tr>
+                ) : (
+                  vessels.map(v => (
+                    <tr key={v.vessel_id}>
+                      <td style={{ fontWeight: 600 }}>{v.vessel_name}</td>
+                      <td style={{ color: 'var(--text-dim)' }}>{v.vessel_id}</td>
+                      <td>{v.last_sync_at ? new Date(v.last_sync_at).toLocaleString() : 'Never'}</td>
+                      <td>
+                        <span style={{ color: v.isSyncDelayed ? 'var(--danger)' : 'var(--success)' }}>
+                          {v.isSyncDelayed ? 'Sync Delayed' : 'On Schedule'}
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{ color: v.pendingReports > 0 ? 'var(--warning)' : 'var(--text-dim)' }}>
+                          {v.pendingReports} Pending
+                        </span>
+                      </td>
+                      <td>
+                        <button className="btn-secondary" style={{ padding: '0.5rem 1rem' }} onClick={() => handleSelectVessel(v as any)}>
+                          Open Mimic
+                        </button>
+                        <button
+                          className="btn-secondary"
+                          style={{ padding: '0.5rem 1rem', marginLeft: '0.5rem', color: 'var(--accent)' }}
+                          onClick={() => handlePushTemplates(v.vessel_id)}
+                        >
+                          Push Templates
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -199,6 +258,16 @@ function App() {
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem' }}>Vessel ID / IMO</label>
                 <input placeholder="e.g. IMO 9123456" value={newVessel.vessel_id} onChange={e => setNewVessel({...newVessel, vessel_id: e.target.value})} />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ flex: 2 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem' }}>IP Address</label>
+                  <input placeholder="e.g. 192.168.1.50" value={newVessel.ip_address} onChange={e => setNewVessel({...newVessel, ip_address: e.target.value})} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem' }}>Port</label>
+                  <input placeholder="3002" value={newVessel.port} onChange={e => setNewVessel({...newVessel, port: e.target.value})} />
+                </div>
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                 <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setIsModalOpen(false)}>Cancel</button>

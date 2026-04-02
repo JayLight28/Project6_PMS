@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Settings,
   Wrench,
@@ -13,26 +13,60 @@ import TreeNavigator, { type TreeNode } from '@shared/components/TreeNavigator';
 
 const PMSModule: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
+  const [tree, setTree] = useState<TreeNode[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock Equipment Tree (Hierarchical)
-  const [tree] = useState<TreeNode[]>([
-    {
-      id: '1', level: 0, type: 'folder', name: 'DECK MACHINERY', children: [
-        { id: '1.1', level: 1, type: 'folder', name: 'Windlass', children: [
-          { id: '1.1.1', level: 2, type: 'file', name: 'Brake Lining Inspection' },
-          { id: '1.1.2', level: 2, type: 'file', name: 'Greasing of Gears' }
-        ]},
-        { id: '1.2', level: 1, type: 'file', name: 'Mooring Winch #1' }
-      ]
-    },
-    {
-      id: '2', level: 0, type: 'folder', name: 'ENGINE ROOM', children: [
-        { id: '2.1', level: 1, type: 'folder', name: 'Main Engine', children: [
-          { id: '2.1.1', level: 2, type: 'file', name: 'Fuel Valve Overhaul' }
-        ]}
-      ]
+  useEffect(() => {
+    fetchTree();
+  }, []);
+
+  const handleTaskComplete = async (taskId: string, linkedTemplateId?: string) => {
+    if (linkedTemplateId) {
+      try {
+        const res = await fetch(`http://localhost:3002/api/documents?template_id=${linkedTemplateId}`);
+        if (res.ok) {
+          const docs = await res.json();
+          const isDone = docs.some((d: any) => d.status === 'completed' || d.status === 'signed');
+          if (!isDone) {
+            alert("Mandatory Safety Document (SMS) must be completed before closing this maintenance task.");
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Link check failed:", err);
+      }
     }
-  ]);
+
+    try {
+      const res = await fetch(`http://localhost:3002/api/pms/items/${taskId}/complete`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        // Refresh or update local state
+        fetchTree();
+        alert("Maintenance task completed successfully.");
+      }
+    } catch (err) {
+      console.error("Failed to complete task:", err);
+    }
+  };
+
+  const fetchTree = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('http://localhost:3002/api/pms/categories');
+      if (res.ok) {
+        const data = await res.json();
+        // Convert flat categories to tree if needed, or assume backend returns tree
+        // For now, assume backend returns tree structure
+        setTree(data); 
+      }
+    } catch (err) {
+      console.error("Failed to fetch PMS tree:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div style={{ display: 'flex', gap: '2rem', height: 'calc(100vh - var(--header-h) - 5rem)' }}>

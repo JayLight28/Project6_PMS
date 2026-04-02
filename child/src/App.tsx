@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import Layout from './components/Layout/Layout';
 import SMSModule from './modules/sms/SMSModule';
+import PMSModule from './modules/pms/PMSModule';
 
 interface User {
   id: number;
@@ -194,21 +195,16 @@ function App() {
         </div>
       )}
 
-      {(view === 'sms' || view === 'pms' || view === 'sync' || view === 'settings') && (
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          height: '100%', 
-          color: 'var(--text-dim)',
-          textAlign: 'center' 
-        }}>
-          <Anchor size={48} style={{ opacity: 0.2, marginBottom: '1.5rem' }} />
-          <h2 style={{ opacity: 0.5 }}>Module Phase Initializing</h2>
-          <p style={{ maxWidth: '400px', marginTop: '1rem', fontSize: '0.875rem' }}>
-            This module is currently being provisioned. Features will be integrated in Phase {view === 'sms' ? '2' : view === 'pms' ? '3' : '4'}.
-          </p>
+      {view === 'sms' && <SMSModule />}
+      {view === 'pms' && <PMSModule />}
+      {view === 'sync' && (
+        <SyncDashboard vesselId="IMO-9123456" />
+      )}
+      {view === 'settings' && (
+        <div style={{ padding: '2rem' }}>
+          <h2>Vessel Settings</h2>
+          <p style={{ color: 'var(--text-dim)' }}>Vessel ID: IMO 9123456</p>
+          <p style={{ color: 'var(--text-dim)' }}>Owner: Fortune Fleet Ltd.</p>
         </div>
       )}
     </Layout>

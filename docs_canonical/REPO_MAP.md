@@ -23,30 +23,39 @@ Stack: React 19 + Express + SQLite
 └── docs_canonical/
 ```
 
-## mother/src/App.tsx Function Map (~215 lines)
+## mother/src/App.tsx Function Map (~251 lines)
 | Handler / Function | Line |
 |--------------------|------|
-| `App` | 29 |
-| `handleSelectVessel` | 40 |
-| `handleAddVessel` | 47 |
+| `App` | 23 |
+| `fetchVessels` | 35 |
+| `fetchStats` | 46 |
+| `handleSelectVessel` | 58 |
+| `handleAddVessel` | 65 |
 
-## mother/server.js Route Map (~166 lines)
+## mother/server.js Route Map (~301 lines)
 | Route | Method | Line |
 |-------|--------|------|
-| `/api/sms/categories` | GET | 61 |
-| `/api/sms/categories` | POST | 65 |
-| `/api/sms/categories/:id` | PUT | 74 |
-| `/api/sms/categories/:id` | DELETE | 82 |
-| `/api/sms/templates` | GET | 90 |
-| `/api/sms/templates` | POST | 94 |
-| `/api/sms/templates/:id` | PUT | 103 |
-| `/api/sms/templates/:id` | DELETE | 112 |
-| `/api/fleet` | GET | 122 |
-| `/api/fleet` | POST | 126 |
-| `/api/pms/global` | GET | 137 |
-| `/api/pms/global` | POST | 141 |
-| `/api/sms/templates` | GET | 149 |
-| `/api/logs/global` | GET | 154 |
+| `/api/sync/prepare/:vesselId` | GET | 22 |
+| `/api/sync/push-all` | POST | 34 |
+| `/api/sync/download/:vesselId/:index` | GET | 51 |
+| `/api/sms/categories` | GET | 115 |
+| `/api/sms/categories` | POST | 119 |
+| `/api/sms/categories/:id` | PUT | 128 |
+| `/api/sms/categories/:id` | DELETE | 136 |
+| `/api/sms/templates` | GET | 144 |
+| `/api/sms/templates` | POST | 148 |
+| `/api/sms/templates/:id` | PUT | 157 |
+| `/api/sms/templates/:id` | DELETE | 166 |
+| `/api/pms/categories` | GET | 176 |
+| `/api/pms/categories` | POST | 180 |
+| `/api/pms/categories/:id` | PUT | 189 |
+| `/api/pms/categories/:id` | DELETE | 197 |
+| `/api/pms/items` | GET | 204 |
+| `/api/pms/items` | POST | 215 |
+| `/api/dashboard/stats` | GET | 228 |
+| `/api/fleet` | GET | 253 |
+| `/api/fleet` | POST | 273 |
+| `/api/logs/global` | GET | 289 |
 
 ## Key Supporting Files
 | File | Purpose |
@@ -60,9 +69,122 @@ Stack: React 19 + Express + SQLite
 - **Token Efficiency**: Check this map before opening any large file.
 - **Mimic Mode**: HQ uses "Mimic Mode" to view vessel data (see `mother/src/App.tsx` L135).
 
-## mother/src/App.tsx Function Map (~215 lines)
+## mother/src/App.tsx Function Map (~251 lines)
 | Handler / Function | Line |
 |--------------------|------|
-| `App` | 29 |
-| `handleSelectVessel` | 40 |
-| `handleAddVessel` | 47 |
+| `App` | 23 |
+| `fetchVessels` | 35 |
+| `fetchStats` | 46 |
+| `handleSelectVessel` | 58 |
+| `handleAddVessel` | 65 |
+
+## mother/src/App.tsx Function Map (~251 lines)
+| Handler / Function | Line |
+|--------------------|------|
+| `App` | 23 |
+| `fetchVessels` | 35 |
+| `fetchStats` | 46 |
+| `handleSelectVessel` | 58 |
+| `handleAddVessel` | 65 |
+
+## mother/src/App.tsx Function Map (~251 lines)
+| Handler / Function | Line |
+|--------------------|------|
+| `App` | 23 |
+| `fetchVessels` | 35 |
+| `fetchStats` | 46 |
+| `handleSelectVessel` | 58 |
+| `handleAddVessel` | 65 |
+
+## mother/server.js Route Map (~301 lines)
+| Route | Method | Line |
+|-------|--------|------|
+| `/api/sync/prepare/:vesselId` | GET | 22 |
+| `/api/sync/push-all` | POST | 34 |
+| `/api/sync/download/:vesselId/:index` | GET | 51 |
+| `/api/sms/categories` | GET | 115 |
+| `/api/sms/categories` | POST | 119 |
+| `/api/sms/categories/:id` | PUT | 128 |
+| `/api/sms/categories/:id` | DELETE | 136 |
+| `/api/sms/templates` | GET | 144 |
+| `/api/sms/templates` | POST | 148 |
+| `/api/sms/templates/:id` | PUT | 157 |
+| `/api/sms/templates/:id` | DELETE | 166 |
+| `/api/pms/categories` | GET | 176 |
+| `/api/pms/categories` | POST | 180 |
+| `/api/pms/categories/:id` | PUT | 189 |
+| `/api/pms/categories/:id` | DELETE | 197 |
+| `/api/pms/items` | GET | 204 |
+| `/api/pms/items` | POST | 215 |
+| `/api/dashboard/stats` | GET | 228 |
+| `/api/fleet` | GET | 253 |
+| `/api/fleet` | POST | 273 |
+| `/api/logs/global` | GET | 289 |
+
+## mother/src/App.tsx Function Map (~251 lines)
+| Handler / Function | Line |
+|--------------------|------|
+| `App` | 23 |
+| `fetchVessels` | 35 |
+| `fetchStats` | 46 |
+| `handleSelectVessel` | 58 |
+| `handleAddVessel` | 65 |
+
+## mother/server.js Route Map (~301 lines)
+| Route | Method | Line |
+|-------|--------|------|
+| `/api/sync/prepare/:vesselId` | GET | 22 |
+| `/api/sync/push-all` | POST | 34 |
+| `/api/sync/download/:vesselId/:index` | GET | 51 |
+| `/api/sms/categories` | GET | 115 |
+| `/api/sms/categories` | POST | 119 |
+| `/api/sms/categories/:id` | PUT | 128 |
+| `/api/sms/categories/:id` | DELETE | 136 |
+| `/api/sms/templates` | GET | 144 |
+| `/api/sms/templates` | POST | 148 |
+| `/api/sms/templates/:id` | PUT | 157 |
+| `/api/sms/templates/:id` | DELETE | 166 |
+| `/api/pms/categories` | GET | 176 |
+| `/api/pms/categories` | POST | 180 |
+| `/api/pms/categories/:id` | PUT | 189 |
+| `/api/pms/categories/:id` | DELETE | 197 |
+| `/api/pms/items` | GET | 204 |
+| `/api/pms/items` | POST | 215 |
+| `/api/dashboard/stats` | GET | 228 |
+| `/api/fleet` | GET | 253 |
+| `/api/fleet` | POST | 273 |
+| `/api/logs/global` | GET | 289 |
+
+## mother/src/App.tsx Function Map (~251 lines)
+| Handler / Function | Line |
+|--------------------|------|
+| `App` | 23 |
+| `fetchVessels` | 35 |
+| `fetchStats` | 46 |
+| `handleSelectVessel` | 58 |
+| `handleAddVessel` | 65 |
+
+## mother/server.js Route Map (~301 lines)
+| Route | Method | Line |
+|-------|--------|------|
+| `/api/sync/prepare/:vesselId` | GET | 22 |
+| `/api/sync/push-all` | POST | 34 |
+| `/api/sync/download/:vesselId/:index` | GET | 51 |
+| `/api/sms/categories` | GET | 115 |
+| `/api/sms/categories` | POST | 119 |
+| `/api/sms/categories/:id` | PUT | 128 |
+| `/api/sms/categories/:id` | DELETE | 136 |
+| `/api/sms/templates` | GET | 144 |
+| `/api/sms/templates` | POST | 148 |
+| `/api/sms/templates/:id` | PUT | 157 |
+| `/api/sms/templates/:id` | DELETE | 166 |
+| `/api/pms/categories` | GET | 176 |
+| `/api/pms/categories` | POST | 180 |
+| `/api/pms/categories/:id` | PUT | 189 |
+| `/api/pms/categories/:id` | DELETE | 197 |
+| `/api/pms/items` | GET | 204 |
+| `/api/pms/items` | POST | 215 |
+| `/api/dashboard/stats` | GET | 228 |
+| `/api/fleet` | GET | 253 |
+| `/api/fleet` | POST | 273 |
+| `/api/logs/global` | GET | 289 |

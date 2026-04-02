@@ -21,12 +21,26 @@ const db = Database(dbPath);
 const schema = fs.readFileSync(schemaPath, 'utf8');
 db.exec(schema);
 
-// Seed Master Admin if not exists
-const masterUser = db.prepare('SELECT * FROM users WHERE role = "master"').get();
-if (!masterUser) {
-    db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)')
-      .run('admin', 'admin123', 'master'); // Simple for demo
-}
+// Seed Sample Data if empty
+const seedData = () => {
+    const masterUser = db.prepare('SELECT * FROM users WHERE role = "master"').get();
+    if (!masterUser) {
+        db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)')
+          .run('master', '123456', 'master');
+        db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)')
+          .run('crew', '123456', 'user');
+        console.log("Seeded default users (master/crew).");
+    }
+
+    const existingCats = db.prepare('SELECT count(*) as count FROM categories').get();
+    if (existingCats.count === 0) {
+        const insert = db.prepare('INSERT INTO categories (name, type, is_system) VALUES (?, ?, 1)');
+        insert.run('DECK MACHINERY', 'pms');
+        insert.run('ENGINE ROOM', 'pms');
+        console.log("Seeded default child PMS categories.");
+    }
+};
+seedData();
 
 // Middleware for logging
 const logAction = (userId, action, details) => {
@@ -50,7 +64,46 @@ app.post('/api/login', (req, res) => {
 
 // Templates (Synced from Mother)
 app.get('/api/templates', (req, res) => {
-    res.json(db.prepare('SELECT * FROM templates').all());
+    res.json(db.prepare('SELECT * FROM templates WHERE is_active = 1').all());
+});
+
+// PMS Categories & Items
+app.get('/api/pms/categories', (req, res) => {
+    res.json(db.prepare('SELECT * FROM categories WHERE type = \'pms\' ORDER BY sort_order, id').all());
+});
+
+app.get('/api/pms/items', (req, res) => {
+    const { category_id } = req.query;
+    let query = 'SELECT * FROM maintenance_items';
+    const params = [];
+    if (category_id) {
+        query += ' WHERE category_id = ?';
+        params.push(category_id);
+    }
+    res.json(db.prepare(query).all(params));
+});
+
+app.post('/api/pms/complete', (req, res) => {
+    const { item_id, worker_id, findings, associated_doc_id } = req.body;
+    try {
+        const stmt = db.prepare(`
+            INSERT INTO maintenance_history (item_id, worker_id, findings, associated_doc_id) 
+            VALUES (?, ?, ?, ?)
+        `);
+        stmt.run(item_id, worker_id, findings, associated_doc_id);
+        
+        // Update last_done_date and calculate next_due_date
+        const item = db.prepare('SELECT interval_months FROM maintenance_items WHERE id = ?').get(item_id);
+        if (item) {
+            const nextDue = new Date();
+            nextDue.setMonth(nextDue.getMonth() + item.interval_months);
+            db.prepare('UPDATE maintenance_items SET last_done_date = CURRENT_TIMESTAMP, next_due_date = ? WHERE id = ?')
+              .run(nextDue.toISOString(), item_id);
+        }
+
+        logAction(worker_id, 'PMS_COMPLETE', `Completed maintenance item ${item_id}`);
+        res.json({ success: true });
+    } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
 // Documents (Filled forms)

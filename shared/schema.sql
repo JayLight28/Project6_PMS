@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS maintenance_items (
 CREATE TABLE IF NOT EXISTS documents (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     template_id INTEGER NOT NULL,
+    vessel_id TEXT,               -- For Mother to track which ship owns it
     title TEXT NOT NULL,
     data_json TEXT NOT NULL,      -- Captured web form data
     author_id INTEGER NOT NULL,
@@ -101,5 +102,13 @@ CREATE TABLE IF NOT EXISTS vessels (
     vessel_id TEXT UNIQUE NOT NULL, -- IMO Number
     api_key TEXT,                 -- For future secure sync
     last_sync_at DATETIME,
+    ip_address TEXT,
+    port INTEGER DEFAULT 3002,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS app_config (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

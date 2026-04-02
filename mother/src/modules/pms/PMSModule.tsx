@@ -1,14 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Settings,
   Wrench,
   FolderPlus,
   Plus,
-  Download,
   Trash2,
   Edit2,
-  Zap,
-  Search as SearchIcon
+  Zap
 } from 'lucide-react';
 import TreeNavigator, { type TreeNode } from '@shared/components/TreeNavigator';
 import Modal from '@shared/components/Modal';
@@ -17,15 +15,84 @@ const PMSModule: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
 
   // Global Equipment Tree
-  const [tree, setTree] = useState<TreeNode[]>([
-    {
-      id: '1', level: 0, type: 'folder', name: 'DECK MACHINERY', children: [
-        { id: '1.1', level: 1, type: 'folder', name: 'Windlass', children: [] }
-      ]
-    },
-    {
-      id: '2', level: 0, type: 'folder', name: 'ENGINE ROOM', children: [] }
-  ]);
+  const [tree, setTree] = useState<TreeNode[]>([]);
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Task Management State
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [newTask, setNewTask] = useState({ name: '', interval_months: 6, linked_template_id: '' });
+  const [templates, setTemplates] = useState<any[]>([]);
+
+  const fetchPMSData = useCallback(async () => {
+    try {
+      const resp = await fetch('http://localhost:3001/api/pms/categories');
+      const cats = await resp.json();
+      
+      const buildTree = (parentId: number | null = null, level = 0): TreeNode[] => {
+        return cats
+          .filter((c: any) => c.parent_id === parentId)
+          .map((c: any) => ({
+            id: c.id.toString(),
+            level,
+            type: 'folder',
+            name: c.name,
+            children: buildTree(c.id, level + 1)
+          }));
+      };
+      
+      setTree(buildTree());
+    } catch (err) {
+      console.error("Failed to fetch PMS categories:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchTemplates = useCallback(async () => {
+    try {
+      const resp = await fetch('http://localhost:3001/api/sms/templates');
+      const data = await resp.json();
+      setTemplates(data);
+    } catch (err) { console.error(err); }
+  }, []);
+
+  useEffect(() => {
+    fetchPMSData();
+    fetchTemplates();
+  }, [fetchPMSData, fetchTemplates]);
+
+  useEffect(() => {
+    if (selectedNode) {
+      fetch('http://localhost:3001/api/pms/items?category_id=' + selectedNode.id)
+        .then(res => res.json())
+        .then(setItems);
+    } else {
+      setItems([]);
+    }
+  }, [selectedNode]);
+
+  const handleAddTask = async () => {
+    if (!selectedNode || !newTask.name) return;
+    try {
+      const resp = await fetch('http://localhost:3001/api/pms/items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newTask,
+          category_id: selectedNode.id
+        })
+      });
+      if (resp.ok) {
+        // Refresh items
+        const res = await fetch('http://localhost:3001/api/pms/items?category_id=' + selectedNode.id);
+        const data = await res.json();
+        setItems(data);
+        setTaskModalOpen(false);
+        setNewTask({ name: '', interval_months: 6, linked_template_id: '' });
+      }
+    } catch (err) { console.error(err); }
+  };
 
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
@@ -55,46 +122,36 @@ const PMSModule: React.FC = () => {
     });
   };
 
-  const handleDeleteCategory = (node: TreeNode) => {
+  const handleDeleteCategory = async (node: TreeNode) => {
     if (!window.confirm(`Are you sure you want to delete "${node.name}"?`)) return;
     
-    const removeFromNodes = (nodes: TreeNode[]): TreeNode[] => {
-      return nodes
-        .filter(n => n.id !== node.id)
-        .map(n => ({
-          ...n,
-          children: n.children ? removeFromNodes(n.children) : []
-        }));
-    };
-
-    setTree(removeFromNodes(tree));
-    if (selectedNode?.id === node.id) setSelectedNode(null);
+    try {
+      const resp = await fetch(`http://localhost:3001/api/pms/categories/${node.id}`, { method: 'DELETE' });
+      if (resp.ok) {
+        fetchPMSData();
+        if (selectedNode?.id === node.id) setSelectedNode(null);
+      }
+    } catch (err) { console.error(err); }
   };
 
-  const handleModalConfirm = (name: string) => {
-    if (modalConfig.mode === 'add') {
-      const newNode: TreeNode = {
-        id: Date.now().toString(),
-        level: modalConfig.parentNode ? modalConfig.parentNode.level + 1 : 0,
-        type: 'folder',
-        name,
-        children: []
-      };
-
-      if (modalConfig.parentNode) {
-        modalConfig.parentNode.children = [...(modalConfig.parentNode.children || []), newNode];
-        setTree([...tree]);
-      } else {
-        setTree([...tree, newNode]);
+  const handleModalConfirm = async (name: string) => {
+    try {
+      if (modalConfig.mode === 'add') {
+        await fetch('http://localhost:3001/api/pms/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, parent_id: modalConfig.parentNode?.id || null })
+        });
+      } else if (modalConfig.mode === 'edit' && modalConfig.targetNode) {
+        await fetch(`http://localhost:3001/api/pms/categories/${modalConfig.targetNode.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
       }
-    } else if (modalConfig.mode === 'edit' && modalConfig.targetNode) {
-      modalConfig.targetNode.name = name;
-      setTree([...tree]);
-      if (selectedNode?.id === modalConfig.targetNode.id) {
-        setSelectedNode({ ...modalConfig.targetNode });
-      }
-    }
-    setModalConfig({ ...modalConfig, isOpen: false });
+      fetchPMSData();
+      setModalConfig({ ...modalConfig, isOpen: false });
+    } catch (err) { console.error(err); }
   };
 
   return (
@@ -151,7 +208,15 @@ const PMSModule: React.FC = () => {
                     <Edit2 size={18} /> Edit Label
                   </button>
                   <div style={{ width: '1px', height: '24px', background: 'var(--border)', margin: '0 0.5rem' }} />
-                  <button className="btn-secondary">
+                  <button 
+                    className="btn-secondary" 
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('http://localhost:3001/api/sync/push-all', { method: 'POST' });
+                        if (res.ok) alert("Master PMS Configuration pushed to all ships. Vessels will receive updates on next connection.");
+                      } catch (err) { console.error(err); }
+                    }}
+                  >
                     <Zap size={18} /> Push to All Ships
                   </button>
                   <button className="btn-secondary">
@@ -173,19 +238,29 @@ const PMSModule: React.FC = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
-                            <td style={{ fontWeight: 600 }}>Visual Inspection</td>
-                            <td>Weekly</td>
-                            <td><span style={{ color: 'var(--text-dim)' }}>None</span></td>
-                            <td>
-                              <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                <Settings size={14} /> Config
-                              </button>
-                            </td>
-                        </tr>
+                        {items.length === 0 ? (
+                          <tr><td colSpan={4} style={{ textAlign: 'center', opacity: 0.5, padding: '2rem' }}>No maintenance tasks defined.</td></tr>
+                        ) : (
+                          items.map(item => (
+                            <tr key={item.id}>
+                                <td style={{ fontWeight: 600 }}>{item.name}</td>
+                                <td>{item.interval_months} Months</td>
+                                <td><span style={{ color: item.linked_template_id ? 'var(--accent)' : 'var(--text-dim)' }}>{item.linked_template_id ? 'Linked' : 'None'}</span></td>
+                                <td>
+                                  <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                    <Settings size={14} /> Config
+                                  </button>
+                                </td>
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                   </table>
-                  <button className="btn-secondary" style={{ width: '100%', marginTop: '1rem', borderStyle: 'dashed' }}>
+                  <button 
+                    className="btn-secondary" 
+                    style={{ width: '100%', marginTop: '1rem', borderStyle: 'dashed' }}
+                    onClick={() => setTaskModalOpen(true)}
+                  >
                       <Plus size={14} /> Add Standard Task
                   </button>
                 </div>
@@ -208,6 +283,40 @@ const PMSModule: React.FC = () => {
         onConfirm={handleModalConfirm}
         placeholder="e.g. DECK MACHINERY"
       />
+
+      {/* Task Creation Modal */}
+      {taskModalOpen && (
+        <div className="modal-overlay">
+          <div className="glass-card" style={{ width: '500px', padding: '2rem' }}>
+            <h2>New Maintenance Task</h2>
+            <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.4rem' }}>Task Name</label>
+                <input placeholder="e.g. Annual Inspection" value={newTask.name} onChange={e => setNewTask({...newTask, name: e.target.value})} />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.4rem' }}>Interval (Months)</label>
+                  <input type="number" value={newTask.interval_months} onChange={e => setNewTask({...newTask, interval_months: parseInt(e.target.value)})} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.4rem' }}>Link to SMS Template</label>
+                  <select style={{ width: '100%' }} value={newTask.linked_template_id} onChange={e => setNewTask({...newTask, linked_template_id: e.target.value})}>
+                    <option value="">None</option>
+                    {templates.map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setTaskModalOpen(false)}>Cancel</button>
+                <button className="btn" style={{ flex: 1 }} onClick={handleAddTask}>Create Global Task</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

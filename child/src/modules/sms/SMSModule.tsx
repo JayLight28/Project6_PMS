@@ -13,25 +13,41 @@ import TreeNavigator, { type TreeNode } from '@shared/components/TreeNavigator';
 
 const SMSModule: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
-  
-  // Mock Hierarchy (This will come from DB/API)
-  const mockTree: TreeNode[] = [
-    {
-      id: '1', level: 0, type: 'folder', name: '1. Main Manual', children: [
-        { id: '1.1', level: 1, type: 'file', name: '1.1 Safety Policy' },
-        { id: '1.2', level: 1, type: 'file', name: '1.2 Roles & Responsibilities' }
-      ]
-    },
-    {
-      id: '2', level: 0, type: 'folder', name: '2. Procedures', children: [
-        { id: '2.1', level: 1, type: 'folder', name: '2.1 Navigation', children: [
-            { id: '2.1.1', level: 2, type: 'file', name: '2.1.1 Passage Planning' }
-        ]}
-      ]
-    },
-    { id: '3', level: 0, type: 'folder', name: '3. Checklists', children: [] },
-    { id: '4', level: 0, type: 'folder', name: '4. Instructions', children: [] }
-  ];
+  const [tree, setTree] = useState<TreeNode[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTree();
+  }, []);
+
+  const fetchTree = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('http://localhost:3002/api/templates');
+      if (res.ok) {
+        const data = await res.json();
+        // Templates usually come as a list, need to group them by category for the tree
+        // For now, let's just show them as a flat list under 'Documents'
+        setTree([{
+          id: 'root',
+          level: 0,
+          type: 'folder',
+          name: 'SMS Templates',
+          children: data.map((t: any) => ({
+            id: `template-${t.id}`,
+            level: 1,
+            type: 'file',
+            name: t.name,
+            template: t
+          }))
+        }]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch SMS tree:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div style={{ display: 'flex', gap: '2rem', height: 'calc(100vh - var(--header-h) - 5rem)' }}>
