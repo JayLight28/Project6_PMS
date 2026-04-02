@@ -18,6 +18,17 @@
   --header-h: 80px;
   --radius: 16px;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Icon Sizes */
+  --icon-xs: 14px;
+  --icon-sm: 18px;
+  --icon-md: 24px;
+  --icon-lg: 40px;
+  --icon-xl: 80px;
+
+  /* Spacing & Gaps */
+  --gap-md: 1.25rem;
+  --gap-lg: 2.5rem;
 }
 
 * { 
@@ -119,7 +130,7 @@ h1, h2, h3, h4 {
 
 .main-scroll { 
   flex: 1;
-  padding: 2.5rem;
+  padding: 1.25rem;
   overflow-y: auto;
   scroll-behavior: smooth;
 }
@@ -131,7 +142,7 @@ h1, h2, h3, h4 {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border); 
   border-radius: 20px; 
-  padding: 1.5rem; 
+  padding: 0.75rem; 
   transition: var(--transition); 
 }
 
@@ -148,26 +159,88 @@ h1, h2, h3, h4 {
   background: var(--accent); 
   border: none; 
   padding: 0.75rem 1.5rem; 
-  border-radius: var(--radius); 
+  border-radius: 12px; 
   font-weight: 700; 
   cursor: pointer; 
   transition: var(--transition); 
   color: var(--primary); 
+  width: auto;
+  user-select: none;
 }
 
 .btn:hover {
   transform: translateY(-2px);
   filter: brightness(1.1);
+  box-shadow: 0 4px 15px var(--accent-glow);
+}
+
+.btn:active {
+  transform: translateY(0) scale(0.96);
 }
 
 .btn-secondary { 
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   background: rgba(255, 255, 255, 0.05); 
   color: var(--text); 
   border: 1px solid var(--border); 
+  padding: 0.75rem 1.5rem; 
+  border-radius: 12px; 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: var(--transition); 
+  user-select: none;
 }
 
 .btn-secondary:hover {
   background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.btn-secondary:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.btn-danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.btn-danger:hover {
+  background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: var(--transition);
+  padding: 0;
+  user-select: none;
+}
+
+.btn-icon:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  transform: scale(1.1);
+}
+
+.btn-icon:active {
+  transform: scale(0.9);
 }
 
 /* Forms & Tables */
@@ -264,8 +337,17 @@ tr:last-child td {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .animate-in {
   animation: fadeIn 0.4s ease forwards;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
 }
 
 /* Modal/Forms */
@@ -317,18 +399,4 @@ input:focus {
   border-color: var(--accent);
 }
 
-.btn {
-  background: var(--accent);
-  color: var(--bg);
-  border: none;
-  padding: 0.875rem 1.5rem;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-  width: 100%;
-}
-
-.btn:hover {
-  opacity: 0.9;
-}
+/* Modal/Forms utilities handled globally above */

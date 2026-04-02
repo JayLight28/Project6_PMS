@@ -1,0 +1,25 @@
+# Project6_PMS (Prism) — Maritime Management System
+> Core Purpose: Hierarchical PMS/SMS for Fleet (Mother) and Vessel (Child).
+
+## Repository Snapshot
+
+- **Mother HQ**: `/mother` (React/Vite, Express, SQLite).
+- **Child Vessel**: `/child` (React/Vite, Express, SQLite).
+- **Shared Context**: `/shared` (Schema, Sync logic).
+- **Docs (Harness Architecture)**: `/docs_canonical` (Source of Truth).
+
+## Stack Summary
+
+- **Frontend**: React 19, Vite 8, Lucide React icons.
+- **Backend**: Express 5, Node.js + `better-sqlite3` (Synchronous SQLite).
+- **Schema**: `/shared/schema.sql`.
+- **Sync**: `/shared/sync_util.js`.
+
+## Primary Directives
+
+1. **Language**: Chat in **Korean**, Code/Documentation in **English**.
+2. **Environment**: Code on **Mac**, Run on **Windows**. Do NOT run build/install on Mac.
+3. **Execution**: `npm run dev` for frontends; `node server.js` for backends.
+4. **Maintenance**: Always check and update `docs_canonical/REPO_MAP.md`.
+5. **Efficiency**: Minimalist output. Code first. No sycophancy.
+6. **Git**: `commit` + `push` immediately.

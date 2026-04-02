@@ -40,11 +40,81 @@ if (existingItems.count === 0) {
     console.log("Seeded global PMS items.");
 }
 
+// Seed SMS Categories
+const existingSmsCats = db.prepare('SELECT count(*) as count FROM categories WHERE type = "sms"').get();
+if (existingSmsCats.count === 0) {
+    const insert = db.prepare('INSERT INTO categories (name, type, is_system) VALUES (?, "sms", 1)');
+    const cats = ['1. Main Manual', '2. Procedures', '3. Checklists', '4. Instructions'];
+    db.transaction(() => cats.forEach(cat => insert.run(cat)))();
+    console.log("Seeded SMS categories.");
+}
+
 // Middleware for logging
 const logAction = (userId, action, details, shipId = null) => {
     db.prepare('INSERT INTO audit_logs (user_id, action, details, vessel_id) VALUES (?, ?, ?, ?)')
       .run(userId, action, details, shipId);
 };
+
+// --- SMS Admin API ---
+
+// 1. Categories
+app.get('/api/sms/categories', (req, res) => {
+    res.json(db.prepare('SELECT * FROM categories WHERE type = "sms" ORDER BY sort_order, id').all());
+});
+
+app.post('/api/sms/categories', (req, res) => {
+  const { name, parent_id } = req.body;
+  try {
+      const stmt = db.prepare('INSERT INTO categories (name, parent_id, type) VALUES (?, ?, "sms")');
+      const result = stmt.run(name, parent_id);
+      res.json({ success: true, id: result.lastInsertRowid });
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.put('/api/sms/categories/:id', (req, res) => {
+  const { name } = req.body;
+  try {
+      db.prepare('UPDATE categories SET name = ? WHERE id = ?').run(name, req.params.id);
+      res.json({ success: true });
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.delete('/api/sms/categories/:id', (req, res) => {
+  try {
+      db.prepare('DELETE FROM categories WHERE id = ?').run(req.params.id);
+      res.json({ success: true });
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+// 2. Templates
+app.get('/api/sms/templates', (req, res) => {
+    res.json(db.prepare('SELECT * FROM templates WHERE is_active = 1').all());
+});
+
+app.post('/api/sms/templates', (req, res) => {
+    const { category_id, name, file_path, fields_json } = req.body;
+    try {
+        const stmt = db.prepare('INSERT INTO templates (category_id, name, file_path, fields_json) VALUES (?, ?, ?, ?)');
+        const result = stmt.run(category_id, name, file_path || 'uploads/' + name, JSON.stringify(fields_json || []));
+        res.json({ success: true, id: result.lastInsertRowid });
+    } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.put('/api/sms/templates/:id', (req, res) => {
+  const { name, fields_json } = req.body;
+  try {
+      db.prepare('UPDATE templates SET name = ?, fields_json = ? WHERE id = ?')
+        .run(name, JSON.stringify(fields_json), req.params.id);
+      res.json({ success: true });
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.delete('/api/sms/templates/:id', (req, res) => {
+  try {
+      db.prepare('UPDATE templates SET is_active = 0 WHERE id = ?').run(req.params.id);
+      res.json({ success: true });
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
 
 // --- Mother Dashboard API ---
 

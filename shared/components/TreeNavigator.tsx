@@ -5,7 +5,9 @@ import {
   Folder, 
   FileText, 
   MoreVertical,
-  Plus
+  Plus,
+  Edit2,
+  Trash2
 } from 'lucide-react';
 
 export interface TreeNode {
@@ -23,6 +25,7 @@ interface TreeNavigatorProps {
   selectedId?: string | number;
   onAdd?: (parentNode: TreeNode | null) => void;
   onEdit?: (node: TreeNode) => void;
+  onDelete?: (node: TreeNode) => void;
   isAdmin?: boolean;
 }
 
@@ -32,9 +35,11 @@ const TreeItem: React.FC<{
   selectedId?: string | number;
   onAdd?: (parentNode: TreeNode | null) => void;
   onEdit?: (node: TreeNode) => void;
+  onDelete?: (node: TreeNode) => void;
   isAdmin?: boolean;
-}> = ({ node, onSelect, selectedId, onAdd, onEdit, isAdmin }) => {
+}> = ({ node, onSelect, selectedId, onAdd, onEdit, onDelete, isAdmin }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [showMenu, setShowMenu] = useState(false);
   const isSelected = selectedId === node.id;
   const hasChildren = node.children && node.children.length > 0;
 
@@ -43,8 +48,15 @@ const TreeItem: React.FC<{
     setIsExpanded(!isExpanded);
   };
 
+  const handleMenuClick = (e: React.MouseEvent, action: 'edit' | 'delete') => {
+    e.stopPropagation();
+    setShowMenu(false);
+    if (action === 'edit') onEdit?.(node);
+    if (action === 'delete') onDelete?.(node);
+  };
+
   return (
-    <div style={{ marginLeft: node.level > 0 ? '1rem' : '0' }}>
+    <div style={{ marginLeft: node.level > 0 ? '1rem' : '0', position: 'relative' }}>
       <div 
         className={`tree-item ${isSelected ? 'active' : ''}`}
         onClick={() => onSelect(node)}
@@ -52,18 +64,18 @@ const TreeItem: React.FC<{
           display: 'flex',
           alignItems: 'center',
           gap: '0.5rem',
-          padding: '0.5rem 0.75rem',
+          padding: '0.1rem 0.6rem',
           borderRadius: '8px',
           cursor: 'pointer',
           transition: 'var(--transition)',
           background: isSelected ? 'rgba(56, 189, 248, 0.1)' : 'transparent',
           color: isSelected ? 'var(--accent)' : 'var(--text-dim)',
-          marginBottom: '2px'
+          marginBottom: '0px'
         }}
       >
         {node.type === 'folder' && (
           <div onClick={toggleExpand} style={{ display: 'flex', alignItems: 'center' }}>
-            {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </div>
         )}
         {node.type === 'folder' ? <Folder size={18} /> : <FileText size={18} />}
@@ -80,28 +92,68 @@ const TreeItem: React.FC<{
         </span>
 
         {isAdmin && (
-          <div className="tree-actions" style={{ display: 'flex', gap: '0.25rem' }}>
-            {node.type === 'folder' && (
-              <button 
-                onClick={(e) => { e.stopPropagation(); onAdd?.(node); }}
-                style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
-              >
-                <Plus size={14} />
-              </button>
-            )}
-            <button 
-              onClick={(e) => { e.stopPropagation(); onEdit?.(node); }}
-              style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
+            <div 
+              className="tree-actions" 
+              style={{ display: 'flex', gap: '0.25rem', position: 'relative' }}
+              onMouseLeave={() => setShowMenu(false)}
             >
-              <MoreVertical size={14} />
-            </button>
+              <button 
+                className="btn-icon"
+                onClick={(e: React.MouseEvent) => { e.stopPropagation(); setShowMenu(!showMenu); }}
+                title="More Actions"
+              >
+                <MoreVertical size={14} />
+              </button>
+
+            {showMenu && (
+              <div 
+                className="fade-in"
+                style={{ 
+                  position: 'absolute', 
+                  right: 0, 
+                  top: '100%', 
+                  zIndex: 200, 
+                  padding: '0.25rem', 
+                  minWidth: '120px',
+                  background: 'var(--secondary)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '10px',
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
+                  backdropFilter: 'blur(10px)'
+                }}
+              >
+                {node.type === 'folder' && (
+                  <div 
+                    className="nav-item"
+                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); setShowMenu(false); onAdd?.(node); }}
+                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', marginBottom: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  >
+                    <Plus size={14} /> Add Sub-item
+                  </div>
+                )}
+                <div 
+                  className="nav-item"
+                  onClick={(e: React.MouseEvent) => handleMenuClick(e, 'edit')}
+                  style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', marginBottom: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                >
+                   <Edit2 size={14} /> Rename
+                </div>
+                <div 
+                  className="nav-item"
+                  onClick={(e: React.MouseEvent) => handleMenuClick(e, 'delete')}
+                  style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', color: 'var(--danger)', marginBottom: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                >
+                   <Trash2 size={14} /> Delete
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {isExpanded && hasChildren && (
         <div className="tree-children" style={{ borderLeft: '1px solid var(--border)', marginLeft: '0.75rem' }}>
-          {node.children?.map(child => (
+          {node.children?.map((child: TreeNode) => (
             <TreeItem 
               key={child.id} 
               node={child} 
@@ -109,6 +161,7 @@ const TreeItem: React.FC<{
               selectedId={selectedId}
               onAdd={onAdd}
               onEdit={onEdit}
+              onDelete={onDelete}
               isAdmin={isAdmin}
             />
           ))}
@@ -118,19 +171,11 @@ const TreeItem: React.FC<{
   );
 };
 
-const TreeNavigator: React.FC<TreeNavigatorProps> = ({ nodes, onSelect, selectedId, onAdd, onEdit, isAdmin }) => {
+const TreeNavigator: React.FC<TreeNavigatorProps> = ({ nodes, onSelect, selectedId, onAdd, onEdit, onDelete, isAdmin }) => {
   return (
-    <div className="tree-navigator" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      {isAdmin && (
-        <button 
-          className="btn-secondary" 
-          style={{ width: '100%', padding: '0.5rem', marginBottom: '1rem', fontSize: '0.8rem' }}
-          onClick={() => onAdd?.(null)}
-        >
-          <Plus size={14} /> Add Root Category
-        </button>
-      )}
-      {nodes.map(node => (
+    <div className="tree-navigator" style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+
+      {nodes.map((node: TreeNode) => (
         <TreeItem 
           key={node.id} 
           node={node} 
@@ -138,6 +183,7 @@ const TreeNavigator: React.FC<TreeNavigatorProps> = ({ nodes, onSelect, selected
           selectedId={selectedId} 
           onAdd={onAdd}
           onEdit={onEdit}
+          onDelete={onDelete}
           isAdmin={isAdmin}
         />
       ))}

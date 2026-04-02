@@ -9,7 +9,7 @@ import {
   Search as SearchIcon,
   Plus
 } from 'lucide-react';
-import TreeNavigator, { TreeNode } from '../../components/TreeNavigator';
+import TreeNavigator, { type TreeNode } from '@shared/components/TreeNavigator';
 
 const PMSModule: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);

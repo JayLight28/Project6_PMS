@@ -27,7 +27,7 @@ interface Template {
 }
 
 function App() {
-  const [view, setView] = useState<'dashboard' | 'templates' | 'pms' | 'sync'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'sms' | 'pms' | 'sync'>('dashboard');
   const [vessels, setVessels] = useState<Vessel[]>([
     { id: 1, vessel_name: 'MV PACIFIC GLORY', vessel_id: 'IMO 9123456', last_sync_at: '2026-04-01 10:00', status: 'online' },
     { id: 2, vessel_name: 'MV ATLANTIC STAR', vessel_id: 'IMO 9876543', last_sync_at: '2026-03-30 15:30', status: 'offline' }
@@ -72,7 +72,7 @@ function App() {
       {/* 1. Global Fleet Dashboard */}
       {!selectedVessel && view === 'dashboard' && (
         <div className="fade-in">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '1.25rem' }}>
             <div className="glass-card">
               <p style={{ color: 'var(--text-dim)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Fleet Size</p>
               <h3 style={{ fontSize: '2rem' }}>{vessels.length}</h3>
@@ -165,7 +165,7 @@ function App() {
       )}
 
       {/* 3. Global Admin Modules */}
-      {!selectedVessel && (view === 'templates' || view === 'pms' || view === 'sync') && (
+      {!selectedVessel && (view === 'sync') && (
         <div className="fade-in">
            <div className="glass-card" style={{ textAlign: 'center', padding: '5rem 2rem' }}>
               <AlertCircle size={48} style={{ color: 'var(--accent)', opacity: 0.3, marginBottom: '1.5rem' }} />

@@ -1,10 +1,10 @@
 import React from 'react';
-import { 
-  BarChart3, 
-  FileStack, 
-  Wrench, 
+import {
+  BarChart3,
+  FileStack,
+  Wrench,
   RefreshCw,
-  Settings, 
+  Settings,
   LogOut,
   ChevronRight,
   Layers,
@@ -24,36 +24,36 @@ interface SidebarProps {
   onAddVessel: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ 
-  currentView, 
-  setView, 
-  selectedVessel, 
-  onSelectVessel, 
-  vessels, 
-  user, 
-  onLogout, 
+const Sidebar: React.FC<SidebarProps> = ({
+  currentView,
+  setView,
+  selectedVessel,
+  onSelectVessel,
+  vessels,
+  user,
+  onLogout,
   isOpen,
   onAddVessel
 }) => {
   const mainModules = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { id: 'templates', label: 'SMS Admin', icon: FileStack },
-    { id: 'pms', label: 'PMS Admin', icon: Wrench },
-    { id: 'sync', label: 'Sync Center', icon: RefreshCw },
+    { id: 'dashboard', label: 'Fleet Overview', icon: BarChart3 },
+    { id: 'sms', label: 'SMS Center', icon: FileStack },
+    { id: 'pms', label: 'PMS Master', icon: Wrench },
+    { id: 'sync', label: 'Sync Console', icon: RefreshCw },
   ];
 
   return (
     <aside className={`sidebar-wrapper ${!isOpen ? 'collapsed' : ''}`}>
       <div style={{ marginBottom: '3rem', padding: isOpen ? '0 1rem' : '0' }}>
-        <h2 style={{ 
-          fontSize: '1.5rem', 
-          color: 'var(--accent)', 
-          display: 'flex', 
-          alignItems: 'center', 
+        <h2 style={{
+          fontSize: '1.5rem',
+          color: 'var(--accent)',
+          display: 'flex',
+          alignItems: 'center',
           gap: '0.5rem',
           justifyContent: isOpen ? 'flex-start' : 'center'
         }}>
-          <Layers size={28} /> <span className="sidebar-header-text" style={{ fontFamily: 'Outfit' }}>SMS MOTHER</span>
+          <Layers size={24} /> <span className="sidebar-header-text" style={{ fontFamily: 'Outfit' }}>HOMEPORT</span>
         </h2>
         {isOpen && (
           <p className="sidebar-header-text" style={{ fontSize: '0.7rem', color: 'var(--text-dim)', letterSpacing: '0.1em', marginTop: '0.25rem' }}>
@@ -74,8 +74,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                 className={`nav-item ${isActive ? 'active' : ''}`}
                 onClick={() => { setView(item.id); onSelectVessel(null); }}
               >
-                <Icon size={20} />
-                {isOpen && <span className="nav-text" style={{ flex: 1 }}>{item.label}</span>}
+                <Icon size={24} />
+                {isOpen && <span className="nav-text" style={{ flex: 1, fontSize: '1.05rem', fontWeight: 600 }}>{item.label}</span>}
               </button>
             );
           })}
@@ -84,35 +84,37 @@ const Sidebar: React.FC<SidebarProps> = ({
         {/* Vessel List */}
         <div style={{ marginBottom: '1.5rem' }}>
           {isOpen && (
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              padding: '0 1rem', 
-              marginBottom: '0.5rem' 
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '0 1rem',
+              marginBottom: '0.5rem'
             }}>
               <p style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-dim)', letterSpacing: '0.1em' }}>VESSELS</p>
-              <button 
+              <button
+                className="btn-icon"
                 onClick={onAddVessel}
-                style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer' }}
+                style={{ color: 'var(--accent)', width: '24px', height: '24px' }}
+                title="Add Vessel"
               >
                 <Plus size={14} />
               </button>
             </div>
           )}
-          
+
           {vessels.map((vessel) => {
             const isActive = selectedVessel?.id === vessel.id;
             return (
-              <button
+          <button
                 key={vessel.id}
                 className={`nav-item ${isActive ? 'active' : ''}`}
                 onClick={() => onSelectVessel(vessel)}
                 title={!isOpen ? vessel.vessel_name : ''}
               >
-                <Ship size={20} style={{ color: isActive ? 'var(--primary)' : 'var(--text-dim)' }} />
+                <Ship size={18} style={{ color: isActive ? 'var(--primary)' : 'var(--text-dim)' }} />
                 {isOpen && <span className="nav-text" style={{ flex: 1, fontSize: '0.875rem' }}>{vessel.vessel_name}</span>}
-                {isOpen && isActive && <ChevronRight size={16} />}
+                {isOpen && isActive && <ChevronRight size={14} />}
               </button>
             );
           })}
@@ -129,12 +131,12 @@ const Sidebar: React.FC<SidebarProps> = ({
             <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text)' }}>HQ Admin</p>
           </div>
         )}
-        <button 
-          className="nav-item" 
-          onClick={onLogout} 
+        <button
+          className="nav-item"
+          onClick={onLogout}
           style={{ color: 'var(--danger)', justifyContent: isOpen ? 'flex-start' : 'center' }}
         >
-          <LogOut size={20} />
+          <LogOut size={18} />
           {isOpen && <span className="nav-text">Logout</span>}
         </button>
       </div>

@@ -1,0 +1,52 @@
+# Project6_PMS (Prism) — Detailed AI Context
+
+This document provides deep context for AI agents working on Project6_PMS.
+
+## 🚨 Primary Constraints
+
+- **Language Policy**: **Korean** for conversation, **English** for code/comments/docs.
+- **Development**: Coding on macOS (JayLight-MacPro), Running on Windows.
+- **Modification**: **Minimal Diff**. Do not rewrite whole files.
+- **Database**: Use `better-sqlite3`. No `async/await` for database operations unless needed for wrapping logic.
+- **Git Flow**: All commits must be immediately followed by a `git push`.
+- **Efficiency**: No openers ("Sure!"), closures ("Hope this helps!"), or sycophancy.
+
+## 📂 Project Decomposition
+
+### Mother HQ (`/mother`)
+| Feature | Entry Point | Route/Line |
+|---------|-------------|------------|
+| Main Dashboard | `mother/src/App.tsx` | `App` Component |
+| Vessel Management| `mother/src/App.tsx` | `handleSelectVessel` (L40) |
+| Fleet API | `mother/server.js` | `GET /api/fleet` (L52) |
+| Global PMS | `mother/server.js` | `GET /api/pms/global` (L67) |
+| SMS Templates | `mother/server.js` | `GET /api/sms/templates` (L79) |
+
+### Child Vessel (`/child`)
+| Feature | Entry Point | Purpose |
+|---------|-------------|---------|
+| Vessel Dashboard| `child/src/App.tsx`| Main operator UI |
+| Sync Client | `child/src/sync.js` | Sync with Mother HQ |
+
+### Shared Resources (`/shared`)
+- **Schema**: `shared/schema.sql` (Canonical table structures).
+- **Utility**: `shared/sync_util.js` (Sync protocol, conflict resolution).
+
+## 📊 Database Schema Summary
+
+Key Tables:
+- `fleet`: (id, imo, name, status)
+- `pms_categories`: (id, parent_id, name, type) – Hierarchical tree.
+- `sms_templates`: (id, category_id, name, content)
+
+## 🎨 UI Style System
+
+- **Glassmorphism**: Defined in `mother/src/index.css`.
+- **Icons**: Always use `lucide-react`.
+- **Tokens**: `--glass-bg`, `--glass-border`, `--primary-accent`.
+
+## ⚙️ Standardized Harness Documentation
+All AI agents **must** maintain these files in `docs_canonical/`:
+1. `AGENT_QUICKREF.md`: Route/Function fast lookup.
+2. `REPO_MAP.md`: Path/Line registry.
+3. `ARCHITECTURE.md`, `STYLEGUIDE.md`, `WORKFLOWS.md`.

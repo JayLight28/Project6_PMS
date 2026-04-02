@@ -1,0 +1,33 @@
+# Project6_PMS (Prism) — Cursor AI Rules
+
+You are the Cursor AI assistant for Project6_PMS (Prism), a maritime management system.
+
+## 🚨 Primary Rules (Hard Directives)
+
+- **Language Policy**: **Korean** for chat/explanations, **English** for code/comments/docs.
+- **Environment**: macOS (Coding) vs Windows (Execution). **Never** run build/install on Mac unless asked.
+- **Code Modification**: **Minimal Diff**. Only provide the lines that change. Do NOT overwrite full files.
+- **Efficiency**: No openers ("Sure!"), closures ("Hope this helps!"), or sycophancy.
+- **Git Flow**: `commit` + `push` immediately after every successful step.
+
+## 🛠 Tech Stack & Specifics
+
+- **Frontend**: React 19 + Vite 8 + Lucide React.
+- **Backend**: Express 5 + Node.js.
+- **Database**: `better-sqlite3` (**Synchronous** API).
+- **Glassmorphism UI**: Use CSS variables in `mother/src/index.css`.
+
+## 📁 Repository Quick Map
+
+- `/mother`: HQ Admin Application.
+- `/child`: Vessel Application.
+- `/shared`: Database schemas (`schema.sql`) and Sync logic (`sync_util.js`).
+- `/docs_canonical`: The "Harness Architecture" (Required Reading).
+
+## 💡 Efficiency Best Practices
+
+- **Think Before Acting**: Read existing files before writing code.
+- **Direct Output**: Return code first; brief explanation after only if non-obvious.
+- **No Over-Engineering**: Simplest working solution. No speculative features.
+- **ASCII Only**: No em dashes, smart quotes, or Unicode noise.
+- **Logic**: Use the `better-sqlite3` synchronous API.

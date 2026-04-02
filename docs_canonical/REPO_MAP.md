@@ -30,15 +30,23 @@ Stack: React 19 + Express + SQLite
 | `handleSelectVessel` | 40 |
 | `handleAddVessel` | 47 |
 
-## mother/server.js Route Map (~96 lines)
+## mother/server.js Route Map (~166 lines)
 | Route | Method | Line |
 |-------|--------|------|
-| `/api/fleet` | GET | 52 |
-| `/api/fleet` | POST | 56 |
-| `/api/pms/global` | GET | 67 |
-| `/api/pms/global` | POST | 71 |
-| `/api/sms/templates` | GET | 79 |
-| `/api/logs/global` | GET | 84 |
+| `/api/sms/categories` | GET | 61 |
+| `/api/sms/categories` | POST | 65 |
+| `/api/sms/categories/:id` | PUT | 74 |
+| `/api/sms/categories/:id` | DELETE | 82 |
+| `/api/sms/templates` | GET | 90 |
+| `/api/sms/templates` | POST | 94 |
+| `/api/sms/templates/:id` | PUT | 103 |
+| `/api/sms/templates/:id` | DELETE | 112 |
+| `/api/fleet` | GET | 122 |
+| `/api/fleet` | POST | 126 |
+| `/api/pms/global` | GET | 137 |
+| `/api/pms/global` | POST | 141 |
+| `/api/sms/templates` | GET | 149 |
+| `/api/logs/global` | GET | 154 |
 
 ## Key Supporting Files
 | File | Purpose |
@@ -51,3 +59,10 @@ Stack: React 19 + Express + SQLite
 ## Notes
 - **Token Efficiency**: Check this map before opening any large file.
 - **Mimic Mode**: HQ uses "Mimic Mode" to view vessel data (see `mother/src/App.tsx` L135).
+
+## mother/src/App.tsx Function Map (~215 lines)
+| Handler / Function | Line |
+|--------------------|------|
+| `App` | 29 |
+| `handleSelectVessel` | 40 |
+| `handleAddVessel` | 47 |

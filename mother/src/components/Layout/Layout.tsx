@@ -29,6 +29,13 @@ const Layout: React.FC<LayoutProps> = ({
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
+  const viewTitleMap: Record<string, string> = {
+    dashboard: 'Fleet Overview',
+    sms: 'SMS Master Admin',
+    pms: 'Global PMS Master',
+    sync: 'Data Sync Console'
+  };
+
   return (
     <div className="app-shell">
       <Sidebar 
@@ -45,7 +52,7 @@ const Layout: React.FC<LayoutProps> = ({
       
       <main className="content-area">
         <Header 
-          title={selectedVessel ? selectedVessel.vessel_name : currentView} 
+          title={selectedVessel ? selectedVessel.vessel_name : (viewTitleMap[currentView] || currentView)} 
           vesselCount={vessels.length}
           onToggleSidebar={toggleSidebar}
         />

@@ -17,7 +17,7 @@ const Header: React.FC<HeaderProps> = ({ title, onToggleSidebar, vesselCount }) 
   return (
     <header style={{ 
       height: 'var(--header-h)', 
-      padding: '0 2.5rem', 
+      padding: '0 1.25rem', 
       display: 'flex', 
       alignItems: 'center', 
       justifyContent: 'space-between',
@@ -26,13 +26,12 @@ const Header: React.FC<HeaderProps> = ({ title, onToggleSidebar, vesselCount }) 
       backdropFilter: 'blur(10px)',
       zIndex: 50
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <button 
           onClick={onToggleSidebar}
-          className="btn-secondary" 
-          style={{ width: '40px', height: '40px', padding: 0 }}
+          className="btn-icon" 
         >
-          <Menu size={20} />
+          <Menu size={18} />
         </button>
         <h1 style={{ fontSize: '1.75rem', textTransform: 'capitalize' }}>{title}</h1>
       </div>
@@ -48,7 +47,7 @@ const Header: React.FC<HeaderProps> = ({ title, onToggleSidebar, vesselCount }) 
           border: '1px solid rgba(56, 189, 248, 0.2)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Globe size={16} style={{ color: 'var(--accent)' }} />
+            <Globe size={14} style={{ color: 'var(--accent)' }} />
             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text)' }}>FLEET CONTEXT</span>
           </div>
           <div style={{ width: '1px', height: '16px', background: 'var(--border)' }}></div>
@@ -58,12 +57,12 @@ const Header: React.FC<HeaderProps> = ({ title, onToggleSidebar, vesselCount }) 
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button className="btn-secondary" style={{ width: '45px', height: '45px', padding: 0, borderRadius: '50%' }}>
-            <Search size={20} />
+          <button className="btn-icon">
+            <Search size={18} />
           </button>
-          <button className="btn-secondary" style={{ width: '45px', height: '45px', padding: 0, borderRadius: '50%', position: 'relative' }}>
-            <Bell size={20} />
-            <div style={{ position: 'absolute', top: '12px', right: '12px', width: '8px', height: '8px', background: 'var(--warning)', borderRadius: '50%', border: '2px solid var(--primary)' }}></div>
+          <button className="btn-icon" style={{ position: 'relative' }}>
+            <Bell size={18} />
+            <div style={{ position: 'absolute', top: '10px', right: '10px', width: '8px', height: '8px', background: 'var(--warning)', borderRadius: '50%', border: '2px solid var(--primary)' }}></div>
           </button>
         </div>
       </div>

@@ -1,48 +1,30 @@
 # 🚨 ANTIGRAVITY SYSTEM OVERRIDE (ACTIVE)
-**PRIMARY REFERENCE:** This file is your one-stop shop for project rules and context.
+> **PRISM (Project6_PMS) Core Directives**. High-density context.
 
----
+## 1. Project Context
+- **Name**: Project6_PMS (Prism).
+- **Goal**: Hierarchical SMS/PMS. Tree-based category management.
+- **Components**: Mother (HQ), Child (Vessel).
 
-## 1. Project Metadata
-- **Project Name:** project6_pms
-- **Core Purpose:** Hierarchical Maritime Management System (SMS/PMS) for HQ (Mother) and Vessels (Child).
-- **Current Status:** Active development - Modernizing PMS/SMS with dynamic category management (Tree-based).
+## 2. Jay's Hard Constraints
+- **Environment**: **Code on Mac**, **Run on Windows** (Mimic Mode).
+- **Rule**: Do NOT run build/install on Mac unless explicitly asked.
+- **Database**: SQLite (`mother/mother.db`).
 
----
+## 3. Tech Stack
+- **Frontend**: React 19, Vite 8, Lucide React (Glassmorphism).
+- **Backend**: Express 5, `better-sqlite3` (**Synchronous** API).
+- **Entry Points**: `mother/src/App.tsx`, `mother/server.js`, `child/src/App.tsx`.
 
-## 2. Environment & Execution (Jay's Hard Constraints)
-> [!IMPORTANT]
-> **DEVELOPMENT WORKFLOW:**
-> - **Coding Device:** macOS (JayLight-MacPro)
-> - **Execution Target:** Windows Remote (Mimic Mode) or Local Mac for dev server.
-> - **Operational Rule:** Unless specified, assume Coding on Mac and Execution on Windows. Do NOT suggest running build/install commands on Mac unless explicitly asked.
+## 4. Documentation (Harness)
+Auto-update these in `docs_canonical/` during major edits:
+1. `AGENT_QUICKREF.md`: Routes/Functions quick lookup.
+2. `REPO_MAP.md`: Path/Line registry.
+3. `ARCHITECTURE.md`, `STYLEGUIDE.md`, `WORKFLOWS.md`.
 
----
-
-## 3. Technology Stack Detection
-- **Frontend:** React 19, Vite 8, Lucide React (Glassmorphism UI).
-- **Backend:** Express 5, better-sqlite3 (Node.js).
-- **Database:** SQLite (`mother/mother.db`).
-- **Primary Entry Points:**
-  - `mother/src/App.tsx` (HQ Dashboard)
-  - `mother/server.js` (HQ API Server)
-  - `child/src/App.tsx` (Vessel Application)
-
----
-
-## 4. Canonical Documentation (docs_canonical/)
-Maintain the "Harness Architecture" by keeping these files updated:
-1. **AGENT_QUICKREF.md**: Core rules and quick lookups.
-2. **ARCHITECTURE.md**: Data flow (Sync) and API schema.
-3. **REPO_MAP.md**: Full function/route mapping (Line numbers).
-4. **STYLEGUIDE.md**: UI tokens, coding conventions.
-5. **WORKFLOWS.md**: Build, Test, and Deploy procedures.
-
----
-
-## 5. Interaction Rules (Captain Jay's Standing Orders)
-- **Communication:** Professional, direct, and minimalist. Use Korean for conversation, English for code/docs.
-- **Tone Control:** No fawning, no unnecessary apologies, no community jargon.
-- **Code Integrity:** Prioritize stability. Always check `docs_canonical/` before modifying core logic.
-- **Minimal Diff:** Provide targeted code snippets instead of overwriting entire files.
-- **Git Flow:** Git = Commit + Push immediately.
+## 5. Standing Orders (Captain Jay)
+- **Language**: Chat in **Korean**, Code/Comments/Docs in **English**.
+- **Tone**: Professional, direct, minimalist. No sycophancy.
+- **Logic**: No over-engineering. **Minimal Diff** approach.
+- **Source of Truth**: Always check `docs_canonical/` before searches.
+- **Git Flow**: `commit` + `push` immediately.

@@ -9,7 +9,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import TreeNavigator, { TreeNode } from '../../components/TreeNavigator';
+import TreeNavigator, { type TreeNode } from '@shared/components/TreeNavigator';
 
 const SMSModule: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
