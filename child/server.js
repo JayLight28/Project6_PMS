@@ -144,7 +144,9 @@ app.put('/api/documents/:id', (req, res) => {
     res.json({ success: true });
 });
 
-import { exportSyncPack, importSyncPack } from '../shared/sync_util.js';
+import pkgSync from '../shared/sync_util.js';
+const { exportSyncPack, importSyncPack } = pkgSync;
+
 
 // Sync Logic
 app.post('/api/sync/export', async (req, res) => {

@@ -1,4 +1,4 @@
-# ARCHITECTURE — PROJECT6_PMS (v1.0.0)
+# ARCHITECTURE — PROJECT6_PMS (v1.0.1)
 <!-- Update on /dock: only if new view mode, API route, or data flow was added. Skip otherwise. -->
 
 ## System Overview

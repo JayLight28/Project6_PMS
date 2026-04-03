@@ -4,8 +4,6 @@ import {
   FileStack,
   Wrench,
   RefreshCw,
-  Settings,
-  LogOut,
   ChevronRight,
   Layers,
   Ship,
@@ -18,8 +16,6 @@ interface SidebarProps {
   selectedVessel: any;
   onSelectVessel: (vessel: any) => void;
   vessels: any[];
-  user: any;
-  onLogout: () => void;
   isOpen: boolean;
   onAddVessel: () => void;
 }
@@ -30,8 +26,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   selectedVessel,
   onSelectVessel,
   vessels,
-  user,
-  onLogout,
   isOpen,
   onAddVessel
 }) => {
@@ -106,7 +100,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           {vessels.map((vessel) => {
             const isActive = selectedVessel?.id === vessel.id;
             return (
-          <button
+              <button
                 key={vessel.id}
                 className={`nav-item ${isActive ? 'active' : ''}`}
                 onClick={() => onSelectVessel(vessel)}
@@ -124,23 +118,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
       </nav>
-
-      <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-        {isOpen && (
-          <div className="user-info" style={{ padding: '0 1rem', marginBottom: '1.5rem' }}>
-            <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text)' }}>HQ Admin</p>
-          </div>
-        )}
-        <button
-          className="nav-item"
-          onClick={onLogout}
-          style={{ color: 'var(--danger)', justifyContent: isOpen ? 'flex-start' : 'center' }}
-        >
-          <LogOut size={18} />
-          {isOpen && <span className="nav-text">Logout</span>}
-        </button>
-      </div>
     </aside>
+
   );
 };
 

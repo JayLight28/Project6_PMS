@@ -1,15 +1,17 @@
-import fs from 'fs';
-import path from 'path';
-import archiver from 'archiver';
-import unzipper from 'unzipper';
-import crypto from 'crypto';
+const fs = require('fs');
+const path = require('path');
+const archiver = require('archiver');
+const unzipper = require('unzipper');
+const crypto = require('crypto');
+
 
 /**
  * Sync Utility for SMS Document Management
  * Handles exporting deltas to ZIP and importing them.
  */
 
-export const exportSyncPack = async (db, targetPath) => {
+const exportSyncPack = async (db, targetPath) => {
+
     // 1. Fetch vessel info for registration/tracking
     const vessel = db.prepare('SELECT * FROM vessels LIMIT 1').get();
     const shipId = vessel ? vessel.vessel_id : 'UNKNOWN';
@@ -74,7 +76,8 @@ export const exportSyncPack = async (db, targetPath) => {
     return { chunked: false, path: targetPath };
 };
 
-export const importSyncPack = async (db, packPath) => {
+const importSyncPack = async (db, packPath) => {
+
     // 1. Unzip
     const directory = await unzipper.Open.file(packPath);
     const manifestFile = directory.files.find(f => f.path === 'manifest.json');
@@ -155,7 +158,8 @@ export const importSyncPack = async (db, packPath) => {
     return data;
 };
 
-export const exportTemplatePack = async (db, targetPath) => {
+const exportTemplatePack = async (db, targetPath) => {
+
     const categories = db.prepare('SELECT * FROM categories').all();
     const templates = db.prepare('SELECT * FROM templates WHERE is_active = 1').all();
     const items = db.prepare('SELECT * FROM maintenance_items WHERE is_global = 1').all();
@@ -187,7 +191,8 @@ export const exportTemplatePack = async (db, targetPath) => {
     return { path: targetPath };
 };
 
-export const importTemplatePack = async (db, packPath) => {
+const importTemplatePack = async (db, packPath) => {
+
     const directory = await unzipper.Open.file(packPath);
     const manifestFile = directory.files.find(f => f.path === 'template_manifest.json');
     const metaFile = directory.files.find(f => f.path === 'template_meta.json');
@@ -241,7 +246,8 @@ export const importTemplatePack = async (db, packPath) => {
     return data;
 };
 
-export const reassembleSyncPack = async (partsPath, totalChunks, targetZipPath) => {
+const reassembleSyncPack = async (partsPath, totalChunks, targetZipPath) => {
+
     const buffers = [];
     for (let i = 1; i <= totalChunks; i++) {
         const partPath = `${partsPath}.part${i}`;
@@ -260,7 +266,8 @@ export const reassembleSyncPack = async (partsPath, totalChunks, targetZipPath) 
     
     return targetZipPath;
 };
-export const exportVesselSyncPack = async (db, vesselId, targetPath) => {
+const exportVesselSyncPack = async (db, vesselId, targetPath) => {
+
     // 1. Fetch vessel data from Mother's database filtered by vessel_id
     const vessel = db.prepare('SELECT * FROM vessels WHERE vessel_id = ?').get(vesselId);
     if (!vessel) throw new Error(`Vessel not found: ${vesselId}`);
@@ -305,4 +312,13 @@ export const exportVesselSyncPack = async (db, vesselId, targetPath) => {
     fs.unlinkSync(manifestPath);
     fs.unlinkSync(metaPath);
     return { path: targetPath };
+};
+
+module.exports = {
+    exportSyncPack,
+    importSyncPack,
+    exportTemplatePack,
+    importTemplatePack,
+    reassembleSyncPack,
+    exportVesselSyncPack
 };

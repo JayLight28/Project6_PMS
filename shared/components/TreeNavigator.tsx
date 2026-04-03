@@ -27,6 +27,7 @@ interface TreeNavigatorProps {
   onEdit?: (node: TreeNode) => void;
   onDelete?: (node: TreeNode) => void;
   isAdmin?: boolean;
+  isCollapsed?: boolean;
 }
 
 const TreeItem: React.FC<{ 
@@ -37,7 +38,8 @@ const TreeItem: React.FC<{
   onEdit?: (node: TreeNode) => void;
   onDelete?: (node: TreeNode) => void;
   isAdmin?: boolean;
-}> = ({ node, onSelect, selectedId, onAdd, onEdit, onDelete, isAdmin }) => {
+  isCollapsed?: boolean;
+}> = ({ node, onSelect, selectedId, onAdd, onEdit, onDelete, isAdmin, isCollapsed }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
   const isSelected = selectedId === node.id;
@@ -56,42 +58,59 @@ const TreeItem: React.FC<{
   };
 
   return (
-    <div style={{ marginLeft: node.level > 0 ? '1rem' : '0', position: 'relative' }}>
+    <div style={{ marginLeft: (!isCollapsed && node.level > 0) ? '1rem' : '0', position: 'relative' }}>
       <div 
-        className={`tree-item ${isSelected ? 'active' : ''}`}
+        className={`tree-item ${isSelected ? 'active' : ''} ${isCollapsed ? 'collapsed' : ''}`}
         onClick={() => onSelect(node)}
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.5rem',
-          padding: '0.1rem 0.6rem',
+          gap: isCollapsed ? '0.25rem' : '0.5rem',
+          padding: isCollapsed ? '0.5rem 0.25rem' : '0.1rem 0.6rem',
+          justifyContent: isCollapsed ? 'center' : 'flex-start',
           borderRadius: '8px',
           cursor: 'pointer',
           transition: 'var(--transition)',
           background: isSelected ? 'rgba(56, 189, 248, 0.1)' : 'transparent',
           color: isSelected ? 'var(--accent)' : 'var(--text-dim)',
-          marginBottom: '0px'
+          marginBottom: '0px',
+          flexDirection: isCollapsed ? 'column' : 'row'
         }}
       >
-        {node.type === 'folder' && (
+        {!isCollapsed && node.type === 'folder' && (
           <div onClick={toggleExpand} style={{ display: 'flex', alignItems: 'center' }}>
             {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </div>
         )}
-        {node.type === 'folder' ? <Folder size={18} /> : <FileText size={18} />}
+        {node.type === 'folder' ? <Folder size={isCollapsed ? 18 : 18} /> : <FileText size={isCollapsed ? 18 : 18} />}
         
-        <span style={{ 
-          fontSize: '0.9rem', 
-          fontWeight: node.type === 'folder' ? 600 : 400,
-          flex: 1,
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis'
-        }}>
-          {node.name}
-        </span>
+        {!isCollapsed ? (
+          <span style={{ 
+            fontSize: '0.9rem', 
+            fontWeight: node.type === 'folder' ? 600 : 400,
+            flex: 1,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>
+            {node.name}
+          </span>
+        ) : (
+          <span style={{ 
+            fontSize: '0.75rem', 
+            fontWeight: 800,
+            color: isSelected ? 'var(--accent)' : 'var(--text-dim)',
+            width: '24px',
+            textAlign: 'center'
+          }} title={node.name}>
+            {(() => {
+              const match = node.name.match(/^([A-Z0-9\-\.]+)/i);
+              return match ? match[1] : node.name.substring(0, 1);
+            })()}
+          </span>
+        )}
 
-        {isAdmin && (
+        {!isCollapsed && isAdmin && (
             <div 
               className="tree-actions" 
               style={{ display: 'flex', gap: '0.25rem', position: 'relative' }}
@@ -152,7 +171,7 @@ const TreeItem: React.FC<{
       </div>
 
       {isExpanded && hasChildren && (
-        <div className="tree-children" style={{ borderLeft: '1px solid var(--border)', marginLeft: '0.75rem' }}>
+        <div className="tree-children" style={{ borderLeft: isCollapsed ? 'none' : '1px solid var(--border)', marginLeft: isCollapsed ? '0' : '0.75rem' }}>
           {node.children?.map((child: TreeNode) => (
             <TreeItem 
               key={child.id} 
@@ -163,6 +182,7 @@ const TreeItem: React.FC<{
               onEdit={onEdit}
               onDelete={onDelete}
               isAdmin={isAdmin}
+              isCollapsed={isCollapsed}
             />
           ))}
         </div>
@@ -171,9 +191,9 @@ const TreeItem: React.FC<{
   );
 };
 
-const TreeNavigator: React.FC<TreeNavigatorProps> = ({ nodes, onSelect, selectedId, onAdd, onEdit, onDelete, isAdmin }) => {
+const TreeNavigator: React.FC<TreeNavigatorProps> = ({ nodes, onSelect, selectedId, onAdd, onEdit, onDelete, isAdmin, isCollapsed }) => {
   return (
-    <div className="tree-navigator" style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+    <div className="tree-navigator" style={{ display: 'flex', flexDirection: 'column', gap: isCollapsed ? '0.5rem' : '0.15rem' }}>
 
       {nodes.map((node: TreeNode) => (
         <TreeItem 
@@ -185,6 +205,7 @@ const TreeNavigator: React.FC<TreeNavigatorProps> = ({ nodes, onSelect, selected
           onEdit={onEdit}
           onDelete={onDelete}
           isAdmin={isAdmin}
+          isCollapsed={isCollapsed}
         />
       ))}
     </div>

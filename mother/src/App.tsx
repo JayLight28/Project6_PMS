@@ -105,8 +105,6 @@ function App() {
       selectedVessel={selectedVessel}
       onSelectVessel={handleSelectVessel}
       vessels={vessels}
-      user={{ username: 'hq_admin' }}
-      onLogout={() => console.log('Logout')}
       onAddVessel={() => setIsModalOpen(true)}
     >
       {/* 1. Global Fleet Dashboard */}

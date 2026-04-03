@@ -9,8 +9,6 @@ interface LayoutProps {
   selectedVessel: any;
   onSelectVessel: (vessel: any) => void;
   vessels: any[];
-  user: any;
-  onLogout: () => void;
   onAddVessel: () => void;
 }
 
@@ -21,8 +19,6 @@ const Layout: React.FC<LayoutProps> = ({
   selectedVessel,
   onSelectVessel,
   vessels,
-  user, 
-  onLogout,
   onAddVessel
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -44,8 +40,6 @@ const Layout: React.FC<LayoutProps> = ({
         selectedVessel={selectedVessel}
         onSelectVessel={onSelectVessel}
         vessels={vessels}
-        user={user} 
-        onLogout={onLogout} 
         isOpen={isSidebarOpen}
         onAddVessel={onAddVessel}
       />

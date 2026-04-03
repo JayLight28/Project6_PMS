@@ -16,11 +16,12 @@ This document provides deep context for AI agents working on Project6_PMS.
 ### Mother HQ (`/mother`)
 | Feature | Entry Point | Route/Line |
 |---------|-------------|------------|
-| Main Dashboard | `mother/src/App.tsx` | `App` Component |
-| Vessel Management| `mother/src/App.tsx` | `handleSelectVessel` (L40) |
-| Fleet API | `mother/server.js` | `GET /api/fleet` (L52) |
-| Global PMS | `mother/server.js` | `GET /api/pms/global` (L67) |
-| SMS Templates | `mother/server.js` | `GET /api/sms/templates` (L79) |
+| Main Dashboard | `mother/src/App.tsx` | `App` Component (L25) |
+| Vessel Management| `mother/src/App.tsx` | `handleSelectVessel` (L60) |
+| Fleet Registry | `mother/server.js` | `GET /api/fleet` (L315) |
+| Global PMS | `mother/server.js` | `GET /api/pms/items` (L265) |
+| SMS Templates | `mother/server.js` | `GET /api/sms/templates` (L151) |
+| Audit Logs | `mother/server.js` | `GET /api/logs/global` (L429) |
 
 ### Child Vessel (`/child`)
 | Feature | Entry Point | Purpose |

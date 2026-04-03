@@ -5,7 +5,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { initDatabase } from './db_init.js';
-import { exportSyncPack, importSyncPack, exportTemplatePack, exportVesselSyncPack } from '../shared/sync_util.js';
+import pkg from '../shared/sync_util.js';
+const { exportSyncPack, importSyncPack, exportTemplatePack, exportVesselSyncPack } = pkg;
+
 import multer from 'multer';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -123,6 +125,7 @@ app.post('/api/sms/categories', (req, res) => {
   try {
       const stmt = db.prepare('INSERT INTO categories (name, parent_id, type) VALUES (?, ?, \'sms\')');
       const result = stmt.run(name, parent_id);
+      logAction(null, 'SMS_CAT_CREATE', `Created SMS category: ${name}`);
       res.json({ success: true, id: result.lastInsertRowid });
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -131,6 +134,7 @@ app.put('/api/sms/categories/:id', (req, res) => {
   const { name } = req.body;
   try {
       db.prepare('UPDATE categories SET name = ? WHERE id = ?').run(name, req.params.id);
+      logAction(null, 'SMS_CAT_UPDATE', `Updated SMS category ID: ${req.params.id} to ${name}`);
       res.json({ success: true });
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -138,6 +142,7 @@ app.put('/api/sms/categories/:id', (req, res) => {
 app.delete('/api/sms/categories/:id', (req, res) => {
   try {
       db.prepare('DELETE FROM categories WHERE id = ?').run(req.params.id);
+      logAction(null, 'SMS_CAT_DELETE', `Deleted SMS category ID: ${req.params.id}`);
       res.json({ success: true });
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -152,6 +157,7 @@ app.post('/api/sms/templates', (req, res) => {
     try {
         const stmt = db.prepare('INSERT INTO templates (category_id, name, file_path, fields_json) VALUES (?, ?, ?, ?)');
         const result = stmt.run(category_id, name, file_path || 'uploads/' + name, JSON.stringify(fields_json || []));
+        logAction(null, 'SMS_TPL_CREATE', `Created template: ${name}`);
         res.json({ success: true, id: result.lastInsertRowid });
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -161,6 +167,7 @@ app.put('/api/sms/templates/:id', (req, res) => {
   try {
       db.prepare('UPDATE templates SET name = ?, fields_json = ? WHERE id = ?')
         .run(name, JSON.stringify(fields_json), req.params.id);
+      logAction(null, 'SMS_TPL_UPDATE', `Updated template ID: ${req.params.id}`);
       res.json({ success: true });
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -168,8 +175,57 @@ app.put('/api/sms/templates/:id', (req, res) => {
 app.delete('/api/sms/templates/:id', (req, res) => {
   try {
       db.prepare('UPDATE templates SET is_active = 0 WHERE id = ?').run(req.params.id);
+      logAction(null, 'SMS_TPL_DEACTIVATE', `Deactivated template ID: ${req.params.id}`);
       res.json({ success: true });
   } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+// 3. Bulk Folder Upload
+app.post('/api/admin/bulk-upload', upload.array('files'), (req, res) => {
+  const { paths: pathsJson, type = 'sms' } = req.body;
+  if (!pathsJson) return res.status(400).json({ error: 'Missing paths metadata' });
+
+  const paths = JSON.parse(pathsJson);
+  const files = req.files;
+
+  if (!files || files.length === 0) return res.status(400).json({ error: 'No files uploaded' });
+
+  try {
+      const getOrCreateCategory = (name, parentId, type) => {
+          const existing = db.prepare('SELECT id FROM categories WHERE name = ? AND parent_id IS ? AND type = ?')
+                            .get(name, parentId, type);
+          if (existing) return existing.id;
+          const result = db.prepare('INSERT INTO categories (name, parent_id, type) VALUES (?, ?, ?)')
+                          .run(name, parentId, type);
+          return result.lastInsertRowid;
+      };
+
+      db.transaction(() => {
+          for (let i = 0; i < files.length; i++) {
+              const file = files[i];
+              const relativePath = paths[i]; // e.g. "Folder/Sub/file.pdf"
+              const segments = relativePath.split('/').filter(s => s);
+              const fileName = segments.pop();
+
+              let currentParentId = null;
+              for (const segment of segments) {
+                  currentParentId = getOrCreateCategory(segment, currentParentId, type);
+              }
+
+              // Multer already saved the file as uploads/[filename]
+              const finalPath = `uploads/${file.filename}`;
+              
+              db.prepare('INSERT INTO templates (category_id, name, file_path) VALUES (?, ?, ?)')
+                .run(currentParentId, fileName, finalPath);
+          }
+      })();
+
+      logAction(null, 'BULK_UPLOAD', `Uploaded ${files.length} files as ${type}`);
+      res.json({ success: true, count: files.length });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: err.message });
+  }
 });
 
 // --- Mother Dashboard API ---
@@ -184,6 +240,7 @@ app.post('/api/pms/categories', (req, res) => {
     try {
         const stmt = db.prepare('INSERT INTO categories (name, parent_id, type) VALUES (?, ?, \'pms\')');
         const result = stmt.run(name, parent_id);
+        logAction(null, 'PMS_CAT_CREATE', `Created PMS category: ${name}`);
         res.json({ success: true, id: result.lastInsertRowid });
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -192,6 +249,7 @@ app.put('/api/pms/categories/:id', (req, res) => {
     const { name } = req.body;
     try {
         db.prepare('UPDATE categories SET name = ? WHERE id = ?').run(name, req.params.id);
+        logAction(null, 'PMS_CAT_UPDATE', `Updated PMS category ID: ${req.params.id} to ${name}`);
         res.json({ success: true });
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -199,6 +257,7 @@ app.put('/api/pms/categories/:id', (req, res) => {
 app.delete('/api/pms/categories/:id', (req, res) => {
     try {
         db.prepare('DELETE FROM categories WHERE id = ?').run(req.params.id);
+        logAction(null, 'PMS_CAT_DELETE', `Deleted PMS category ID: ${req.params.id}`);
         res.json({ success: true });
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -222,6 +281,7 @@ app.post('/api/pms/items', (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, 1)
         `);
         const result = stmt.run(category_id, name, description, interval_months, linked_template_id, requires_cert);
+        logAction(null, 'PMS_ITEM_CREATE', `Created global PMS item: ${name}`);
         res.json({ success: true, id: result.lastInsertRowid });
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -288,6 +348,7 @@ app.put('/api/fleet/:vessel_id', (req, res) => {
     try {
         db.prepare('UPDATE vessels SET ip_address = ?, port = ? WHERE vessel_id = ?')
           .run(ip_address, port || 3002, req.params.vessel_id);
+        logAction(null, 'FLEET_UPDATE', `Updated connectivity for vessel: ${req.params.vessel_id}`);
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });

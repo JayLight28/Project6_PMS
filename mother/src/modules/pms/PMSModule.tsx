@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Settings,
   Wrench,
-  FolderPlus,
+  ChevronLeft,
+  ChevronRight,
+  FolderOpen,
   Plus,
   Trash2,
   Edit2,
@@ -10,14 +12,22 @@ import {
 } from 'lucide-react';
 import TreeNavigator, { type TreeNode } from '@shared/components/TreeNavigator';
 import Modal from '@shared/components/Modal';
+import BulkUploadModal from '@shared/components/BulkUploadModal';
+import DropdownMenu from '@shared/components/DropdownMenu';
 
 const PMSModule: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
+  const [isNavCollapsed, setIsNavCollapsed] = useState(false);
+  const folderInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Bulk Upload State
+  const [bulkFiles, setBulkFiles] = useState<FileList | null>(null);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
 
   // Global Equipment Tree
   const [tree, setTree] = useState<TreeNode[]>([]);
   const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+
   
   // Task Management State
   const [taskModalOpen, setTaskModalOpen] = useState(false);
@@ -44,10 +54,9 @@ const PMSModule: React.FC = () => {
       setTree(buildTree());
     } catch (err) {
       console.error("Failed to fetch PMS categories:", err);
-    } finally {
-      setLoading(false);
     }
   }, []);
+
 
   const fetchTemplates = useCallback(async () => {
     try {
@@ -90,9 +99,16 @@ const PMSModule: React.FC = () => {
         setItems(data);
         setTaskModalOpen(false);
         setNewTask({ name: '', interval_months: 6, linked_template_id: '' });
+      } else {
+        const errData = await resp.json();
+        alert(`Failed to add task: ${errData.error || 'Unknown error'}`);
       }
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      console.error(err);
+      alert("Network error: Could not save the task.");
+    }
   };
+
 
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
@@ -134,45 +150,96 @@ const PMSModule: React.FC = () => {
     } catch (err) { console.error(err); }
   };
 
+  const handleBulkFolderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    setBulkFiles(files);
+    setIsBulkModalOpen(true);
+  };
+
   const handleModalConfirm = async (name: string) => {
     try {
+      let res;
       if (modalConfig.mode === 'add') {
-        await fetch('http://localhost:3001/api/pms/categories', {
+        res = await fetch('http://localhost:3001/api/pms/categories', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, parent_id: modalConfig.parentNode?.id || null })
         });
       } else if (modalConfig.mode === 'edit' && modalConfig.targetNode) {
-        await fetch(`http://localhost:3001/api/pms/categories/${modalConfig.targetNode.id}`, {
+        res = await fetch(`http://localhost:3001/api/pms/categories/${modalConfig.targetNode.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name })
         });
       }
-      fetchPMSData();
-      setModalConfig({ ...modalConfig, isOpen: false });
-    } catch (err) { console.error(err); }
+
+      if (res && res.ok) {
+        fetchPMSData();
+        setModalConfig({ ...modalConfig, isOpen: false });
+      } else if (res) {
+        const errData = await res.json();
+        alert(`Failed to save category: ${errData.error || 'Unknown error'}`);
+      }
+    } catch (err) { 
+      console.error(err);
+      alert("Network error: Could not reach the server.");
+    }
   };
+
 
   return (
     <div style={{ position: 'relative', height: '100%' }}>
       <div style={{ display: 'flex', gap: '1rem', height: 'calc(100vh - var(--header-h) - 5rem)' }}>
         {/* Sidebar: Global Equipment Setup */}
-        <div className="glass-card" style={{ width: '350px', display: 'flex', flexDirection: 'column', padding: 'var(--gap-md)' }}>
-          <div style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Settings size={18} style={{ color: 'var(--accent)' }} /> Global PMS Admin
-            </h3>
-            <button 
-              className="btn-icon" 
-              onClick={() => handleAddCategory(null)}
-              title="Add Root Category"
-            >
-              <Plus size={18} />
-            </button>
+        <div className="glass-card" style={{ 
+          width: isNavCollapsed ? '80px' : '350px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          padding: isNavCollapsed ? 'var(--gap-md) 0.5rem' : 'var(--gap-md)',
+          transition: 'var(--transition)',
+          overflow: 'hidden'
+        }}>
+          <div style={{ 
+            marginBottom: '0.75rem', 
+            display: 'flex', 
+            justifyContent: isNavCollapsed ? 'center' : 'space-between', 
+            alignItems: 'center',
+            flexDirection: isNavCollapsed ? 'column' : 'row',
+            gap: isNavCollapsed ? '0.75rem' : '0'
+          }}>
+            {!isNavCollapsed && (
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}>
+                <Settings size={18} style={{ color: 'var(--accent)' }} /> Global PMS Admin
+              </h3>
+            )}
+            <div style={{ display: 'flex', flexDirection: isNavCollapsed ? 'column' : 'row', gap: '0.25rem' }}>
+              <DropdownMenu 
+                items={[
+                  { 
+                    label: 'Add Root Category', 
+                    icon: <Plus size={16} />, 
+                    onClick: () => handleAddCategory(null) 
+                  },
+                  { 
+                    label: 'Bulk Folder Upload', 
+                    icon: <FolderOpen size={16} />, 
+                    onClick: () => folderInputRef.current?.click() 
+                  }
+                ]} 
+              />
+              <button 
+                className="btn-icon" 
+                onClick={() => setIsNavCollapsed(!isNavCollapsed)}
+                title={isNavCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                style={{ width: '32px', height: '32px' }}
+              >
+                {isNavCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+              </button>
+            </div>
           </div>
 
-          <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingRight: isNavCollapsed ? '0' : '0.5rem' }}>
             <TreeNavigator 
               nodes={tree} 
               onSelect={setSelectedNode} 
@@ -181,6 +248,7 @@ const PMSModule: React.FC = () => {
               onAdd={handleAddCategory}
               onEdit={handleEditCategory}
               onDelete={handleDeleteCategory}
+              isCollapsed={isNavCollapsed}
             />
           </div>
         </div>
@@ -219,11 +287,15 @@ const PMSModule: React.FC = () => {
                   >
                     <Zap size={18} /> Push to All Ships
                   </button>
-                  <button className="btn-secondary">
-                    <FolderPlus size={18} /> Move to Category
-                  </button>
                 </div>
               </div>
+              <input 
+                type="file" 
+                ref={folderInputRef} 
+                style={{ display: 'none' }} 
+                {...({ webkitdirectory: "", directory: "" } as any)} 
+                onChange={handleBulkFolderChange} 
+              />
 
               <div style={{ marginTop: '1.5rem' }}>
                 <h3>Maintenance Schedule for this Item</h3>
@@ -317,6 +389,14 @@ const PMSModule: React.FC = () => {
           </div>
         </div>
       )}
+
+      <BulkUploadModal 
+        isOpen={isBulkModalOpen}
+        onClose={() => setIsBulkModalOpen(false)}
+        files={bulkFiles}
+        type="pms"
+        onComplete={fetchPMSData}
+      />
     </div>
   );
 };

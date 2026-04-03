@@ -5,12 +5,19 @@ import {
   FolderPlus,
   Trash2,
   Edit2,
+  ChevronLeft,
+  ChevronRight,
+  MoreVertical,
+  FolderOpen,
+  Zap,
   Upload,
   Cpu,
   Activity
 } from 'lucide-react';
 import TreeNavigator, { type TreeNode } from '@shared/components/TreeNavigator';
 import Modal from '@shared/components/Modal';
+import BulkUploadModal from '@shared/components/BulkUploadModal';
+import DropdownMenu from '@shared/components/DropdownMenu';
 
 const SMSModule: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
@@ -18,7 +25,13 @@ const SMSModule: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [parsingStep, setParsingStep] = useState(0);
+  const [isNavCollapsed, setIsNavCollapsed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
+  
+  // Bulk Upload State
+  const [bulkFiles, setBulkFiles] = useState<FileList | null>(null);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
 
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
@@ -122,7 +135,7 @@ const SMSModule: React.FC = () => {
     try {
       const isTemplate = typeof node.id === 'string' && node.id.startsWith('tpl-');
       const url = isTemplate 
-        ? `${API_BASE}/templates/${node.id.split('-')[1]}` 
+        ? `${API_BASE}/templates/${String(node.id).split('-')[1]}` 
         : `${API_BASE}/categories/${node.id}`;
       
       const res = await fetch(url, { method: 'DELETE' });
@@ -133,31 +146,58 @@ const SMSModule: React.FC = () => {
     } catch (err) { console.error("Delete failed", err); }
   };
 
-  const handleModalConfirm = async (name: string) => {
+  const handleModalConfirm = async (name: string, type?: 'folder' | 'file') => {
     try {
       if (modalConfig.mode === 'add') {
-        const res = await fetch(`${API_BASE}/categories`, {
+        const parentId = modalConfig.parentNode?.id;
+        const cleanParentId = typeof parentId === 'string' && parentId.startsWith('tpl-') 
+          ? parentId.split('-')[1] 
+          : parentId;
+
+        const isTemplate = type === 'file';
+        const url = isTemplate ? `${API_BASE}/templates` : `${API_BASE}/categories`;
+        const body = isTemplate 
+          ? { name, category_id: cleanParentId, file_path: `uploads/${name}.pdf` }
+          : { name, parent_id: cleanParentId };
+
+        const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, parent_id: modalConfig.parentNode?.id || null })
+          body: JSON.stringify(body)
         });
-        if (res.ok) await fetchHierarchy();
+        
+        if (res.ok) {
+          await fetchHierarchy();
+        } else {
+          const errData = await res.json();
+          alert(`Failed to save: ${errData.error || 'Unknown error'}`);
+        }
       } else if (modalConfig.mode === 'edit' && modalConfig.targetNode) {
         const isTemplate = typeof modalConfig.targetNode.id === 'string' && modalConfig.targetNode.id.startsWith('tpl-');
         const url = isTemplate 
-          ? `${API_BASE}/templates/${modalConfig.targetNode.id.split('-')[1]}` 
+          ? `${API_BASE}/templates/${String(modalConfig.targetNode.id).split('-')[1]}` 
           : `${API_BASE}/categories/${modalConfig.targetNode.id}`;
           
-        await fetch(url, {
+        const res = await fetch(url, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name })
         });
-        await fetchHierarchy();
+        
+        if (res.ok) {
+          await fetchHierarchy();
+        } else {
+          const errData = await res.json();
+          alert(`Failed to update: ${errData.error || 'Unknown error'}`);
+        }
       }
-    } catch (err) { console.error("Save failed", err); }
+    } catch (err) { 
+      console.error("Save failed", err);
+      alert("Network error: Could not reach the server.");
+    }
     setModalConfig({ ...modalConfig, isOpen: false });
   };
+
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -184,6 +224,13 @@ const SMSModule: React.FC = () => {
     } catch (err) { console.error("Upload failed", err); }
     setIsUploading(false);
     if (event.target) event.target.value = '';
+  };
+  
+  const handleBulkFolderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    setBulkFiles(files);
+    setIsBulkModalOpen(true);
   };
 
   const handleRunAutoParser = async () => {
@@ -218,7 +265,6 @@ const SMSModule: React.FC = () => {
           });
           await fetchHierarchy();
           
-          // Refresh selected node state
           const resTpls = await fetch(`${API_BASE}/templates`);
           const tpls = await resTpls.json();
           const updated = tpls.find((t: any) => `tpl-${t.id}` === selectedNode.id);
@@ -252,22 +298,56 @@ const SMSModule: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', gap: '1rem', height: 'calc(100vh - var(--header-h) - 5rem)' }}>
-      {/* Sidebar: Category Administration */}
-      <div className="glass-card" style={{ width: '350px', display: 'flex', flexDirection: 'column', padding: 'var(--gap-md)' }}>
-        <div style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Settings size={18} style={{ color: 'var(--accent)' }} /> SMS Category Admin
-          </h3>
-          <button 
-            className="btn-icon" 
-            onClick={() => handleAddCategory(null)}
-            title="Add Root Category"
-          >
-            <Plus size={18} />
-          </button>
+      <div className="glass-card" style={{ 
+        width: isNavCollapsed ? '80px' : '350px', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        padding: isNavCollapsed ? 'var(--gap-md) 0.5rem' : 'var(--gap-md)',
+        transition: 'var(--transition)',
+        overflow: 'hidden'
+      }}>
+        <div style={{ 
+          marginBottom: '0.75rem', 
+          display: 'flex', 
+          justifyContent: isNavCollapsed ? 'center' : 'space-between', 
+          alignItems: 'center',
+          flexDirection: isNavCollapsed ? 'column' : 'row',
+          gap: isNavCollapsed ? '0.75rem' : '0'
+        }}>
+          {!isNavCollapsed && (
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}>
+              <Settings size={18} style={{ color: 'var(--accent)' }} /> SMS Category Admin
+            </h3>
+          )}
+          <div style={{ display: 'flex', flexDirection: isNavCollapsed ? 'column' : 'row', gap: '0.25rem' }}>
+            {!isNavCollapsed && (
+              <DropdownMenu 
+                items={[
+                  { 
+                    label: 'Add Root Category', 
+                    icon: <Plus size={16} />, 
+                    onClick: () => handleAddCategory(null) 
+                  },
+                  { 
+                    label: 'Bulk Folder Upload', 
+                    icon: <FolderOpen size={16} />, 
+                    onClick: () => folderInputRef.current?.click() 
+                  }
+                ]} 
+              />
+            )}
+            <button 
+              className="btn-icon" 
+              onClick={() => setIsNavCollapsed(!isNavCollapsed)}
+              title={isNavCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+              style={{ width: '32px', height: '32px' }}
+            >
+              {isNavCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+            </button>
+          </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingRight: isNavCollapsed ? '0' : '0.5rem' }}>
           <TreeNavigator 
             nodes={tree} 
             onSelect={setSelectedNode} 
@@ -276,11 +356,11 @@ const SMSModule: React.FC = () => {
             onAdd={handleAddCategory}
             onEdit={handleEditCategory}
             onDelete={handleDeleteCategory}
+            isCollapsed={isNavCollapsed}
           />
         </div>
       </div>
 
-      {/* Main Panel */}
       <div className="glass-card" style={{ flex: 1, padding: 'var(--gap-lg)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         {selectedNode ? (
           <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -319,7 +399,25 @@ const SMSModule: React.FC = () => {
                     {isParsing ? 'Parsing...' : 'Run Auto-Parser'}
                   </button>
                 )}
+                <button 
+                  className="btn-secondary" 
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('http://localhost:3001/api/sync/push-all', { method: 'POST' });
+                      if (res.ok) alert("Master SMS Configuration pushed to all ships. Vessels will receive updates on next connection.");
+                    } catch (err) { console.error(err); }
+                  }}
+                >
+                  <Zap size={18} /> Push to All Ships
+                </button>
                 <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} />
+                <input 
+                    type="file" 
+                    ref={folderInputRef} 
+                    style={{ display: 'none' }} 
+                    {...({ webkitdirectory: "", directory: "" } as any)} 
+                    onChange={handleBulkFolderChange} 
+                />
               </div>
             </div>
 
@@ -396,6 +494,14 @@ const SMSModule: React.FC = () => {
         showTypeSelector={modalConfig.showTypeSelector}
         onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
         onConfirm={handleModalConfirm}
+      />
+
+      <BulkUploadModal 
+        isOpen={isBulkModalOpen}
+        onClose={() => setIsBulkModalOpen(false)}
+        files={bulkFiles}
+        type="sms"
+        onComplete={fetchHierarchy}
       />
     </div>
   );
