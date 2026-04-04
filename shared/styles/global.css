@@ -1,19 +1,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;800&display=swap');
 
 :root {
-  --primary: #0f172a;
-  --secondary: #1e293b;
-  --accent: #38bdf8;
-  --accent-glow: rgba(56, 189, 248, 0.3);
-  --text: #f8fafc;
-  --text-dim: #94a3b8;
-  --bg: #020617;
-  --card-bg: rgba(30, 41, 59, 0.4);
-  --border: rgba(255, 255, 255, 0.1);
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --glass: rgba(15, 23, 42, 0.6);
+  /* HSL Design Tokens */
+  --p-h: 222; --p-s: 47%; --p-l: 11%;
+  --s-h: 215; --s-s: 32%; --s-l: 17%;
+  --a-h: 199; --a-s: 94%; --a-l: 60%;
+  
+  --primary: hsl(var(--p-h), var(--p-s), var(--p-l));
+  --secondary: hsl(var(--s-h), var(--s-s), var(--s-l));
+  --accent: hsl(var(--a-h), var(--a-s), var(--a-l));
+  --accent-glow: hsla(var(--a-h), var(--a-s), var(--a-l), 0.3);
+  
+  --text: hsl(210, 40%, 98%);
+  --text-dim: hsl(215, 25%, 65%);
+  --bg: hsl(222, 84%, 5%);
+  --card-bg: hsla(var(--s-h), var(--s-s), var(--s-l), 0.4);
+  --border: hsla(0, 0%, 100%, 0.1);
+  
+  --success: hsl(158, 84%, 40%);
+  --warning: hsl(38, 92%, 50%);
+  --danger: hsl(0, 84%, 60%);
+  --glass: hsla(var(--p-h), var(--p-s), var(--p-l), 0.6);
   --sidebar-w: 280px;
   --header-h: 80px;
   --radius: 16px;

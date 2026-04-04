@@ -4,6 +4,7 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { generateDocument } from '../shared/doc_generator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -142,6 +143,41 @@ app.put('/api/documents/:id', (req, res) => {
     
     logAction(user_id, 'EDIT_DOC', `Edited document ${id}. ${reason ? 'Reason: ' + reason : ''}`);
     res.json({ success: true });
+});
+
+app.get('/api/documents/:id/download', async (req, res) => {
+    try {
+        const doc = db.prepare('SELECT * FROM documents WHERE id = ?').get(req.params.id);
+        if (!doc) return res.status(404).json({ error: 'Document not found' });
+
+        const tpl = db.prepare('SELECT * FROM templates WHERE id = ?').get(doc.template_id);
+        if (!tpl) return res.status(404).json({ error: 'Template not found' });
+
+        const uploadDir = path.join(__dirname, 'uploads');
+        const templateFileName = tpl.file_path.split('/').pop();
+        const templatePath = path.join(uploadDir, templateFileName);
+        
+        if (!fs.existsSync(templatePath)) {
+            return res.status(404).json({ error: `Physical template file not found: ${templateFileName}` });
+        }
+
+        const outDir = path.join(__dirname, 'generated');
+        if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+
+        const exportExt = path.extname(templatePath);
+        const outFileName = `Filled_${doc.title.replace(/\s+/g, '_')}${exportExt}`;
+        const outPath = path.join(outDir, outFileName);
+
+        const data = JSON.parse(doc.data_json);
+        const metadata = JSON.parse(tpl.fields_json || '[]');
+
+        await generateDocument(templatePath, outPath, data, metadata);
+        
+        res.download(outPath, outFileName);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 import pkgSync from '../shared/sync_util.js';

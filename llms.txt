@@ -1,4 +1,4 @@
-# Project6_PMS (Prism) — Maritime Management System
+# Project6_PMS (Prism) — Maritime Management System (v1.1.0)
 > Core Purpose: Hierarchical PMS/SMS for Fleet (Mother) and Vessel (Child).
 
 ## Repository Snapshot
@@ -14,6 +14,7 @@
 - **Backend**: Express 5, Node.js + `better-sqlite3` (Synchronous SQLite).
 - **Schema**: `/shared/schema.sql`.
 - **Sync**: `/shared/sync_util.js`.
+- **Form Editor**: `/mother/template_sync.js` (Styling), `/shared/doc_generator.js` (Filling).
 
 ## Primary Directives
 

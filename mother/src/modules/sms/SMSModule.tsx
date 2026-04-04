@@ -18,9 +18,11 @@ import TreeNavigator, { type TreeNode } from '@shared/components/TreeNavigator';
 import Modal from '@shared/components/Modal';
 import BulkUploadModal from '@shared/components/BulkUploadModal';
 import DropdownMenu from '@shared/components/DropdownMenu';
+import Config from '@shared/config';
 
 const SMSModule: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
+  const [selectedFieldIdx, setSelectedFieldIdx] = useState<number | null>(null);
   const [tree, setTree] = useState<TreeNode[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
@@ -45,7 +47,7 @@ const SMSModule: React.FC = () => {
     parentNode: null
   });
 
-  const API_BASE = 'http://localhost:3001/api/sms';
+  const API_BASE = `${Config.MOTHER_API_URL}/sms`;
 
   const parsingSteps = [
     "Initializing AI OCR engine...",
@@ -283,6 +285,41 @@ const SMSModule: React.FC = () => {
       }
     }, 800);
   };
+  
+  const handleUpdateField = (index: number, updates: any) => {
+    if (!selectedNode || !selectedNode.itemData) return;
+    const newFields = [...(selectedNode.itemData.parsedFields || [])];
+    newFields[index] = { ...newFields[index], ...updates };
+    
+    setSelectedNode({
+      ...selectedNode,
+      itemData: { ...selectedNode.itemData, parsedFields: newFields }
+    });
+  };
+
+  const handleSyncStyle = async () => {
+    if (!selectedNode || typeof selectedNode.id !== 'string') return;
+    const tplId = selectedNode.id.split('-')[1];
+    
+    try {
+        const res = await fetch(`${Config.MOTHER_API_URL}/sms/templates/${tplId}/sync-style`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fields_json: selectedNode.itemData.parsedFields })
+        });
+        
+        if (res.ok) {
+            alert("Success! Formatting successfully synced to the original Word/Excel template file.");
+            await fetchHierarchy();
+        } else {
+            const err = await res.json();
+            alert(`Sync failed: ${err.error}`);
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Network error while syncing style.");
+    }
+  };
 
   const handleLoadSample = () => {
     if (!selectedNode) return;
@@ -464,14 +501,92 @@ const SMSModule: React.FC = () => {
                   </div>
                   <div>
                     {selectedNode.itemData?.isParsed && (
-                      <div className="glass-card fade-in" style={{ padding: '1.25rem' }}>
-                        <h3 style={{ marginBottom: '1rem' }}>Extracted Fields</h3>
-                        {selectedNode.itemData.parsedFields.map((f: any, i: number) => (
-                          <div key={i} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '0.5rem' }}>
-                            <div style={{ fontSize: '0.6rem', color: 'var(--text-dim)' }}>{f.field}</div>
-                            <div style={{ fontWeight: 600 }}>{f.value}</div>
-                          </div>
-                        ))}
+                      <div className="glass-card fade-in" style={{ padding: '1.25rem', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h3 style={{ margin: 0 }}>Template Fields</h3>
+                            <button className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }} onClick={handleSyncStyle}>
+                                <Zap size={14} /> Sync to Original
+                            </button>
+                        </div>
+                        
+                        <div style={{ flex: 1, overflowY: 'auto' }}>
+                            {selectedNode.itemData.parsedFields.map((f: any, i: number) => (
+                            <div 
+                                key={i} 
+                                onClick={() => setSelectedFieldIdx(i === selectedFieldIdx ? null : i)}
+                                style={{ 
+                                    padding: '0.75rem', 
+                                    background: i === selectedFieldIdx ? 'rgba(56, 189, 248, 0.1)' : 'rgba(255,255,255,0.03)', 
+                                    borderRadius: '8px', 
+                                    border: i === selectedFieldIdx ? '1px solid var(--accent)' : '1px solid var(--border)', 
+                                    marginBottom: '0.5rem',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>TAG: {f.field}</div>
+                                        <div style={{ fontWeight: 600, color: i === selectedFieldIdx ? 'var(--accent)' : 'inherit' }}>{f.value}</div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                        {f.bold && <span style={{ fontSize: '10px', background: 'var(--accent)', color: 'black', padding: '1px 4px', borderRadius: '4px', fontWeight: 800 }}>B</span>}
+                                        {f.shrinkToFit && <span style={{ fontSize: '10px', background: '#fbbf24', color: 'black', padding: '1px 4px', borderRadius: '4px', fontWeight: 800 }}>S</span>}
+                                    </div>
+                                </div>
+
+                                {i === selectedFieldIdx && (
+                                    <div className="fade-in" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }} onClick={e => e.stopPropagation()}>
+                                        <div style={{ gridColumn: 'span 2' }}>
+                                            <label style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.25rem', opacity: 0.6 }}>Alignment</label>
+                                            <div style={{ display: 'flex', gap: '2px', background: 'rgba(0,0,0,0.2)', padding: '2px', borderRadius: '4px' }}>
+                                                {['left', 'center', 'right'].map(align => (
+                                                    <button 
+                                                        key={align}
+                                                        onClick={() => handleUpdateField(i, { align })}
+                                                        style={{ 
+                                                            flex: 1, padding: '4px', fontSize: '0.7rem', border: 'none', borderRadius: '3px',
+                                                            background: f.align === align ? 'var(--accent)' : 'transparent',
+                                                            color: f.align === align ? 'black' : 'white',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        {align.toUpperCase()}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        
+                                        <button 
+                                            className={f.bold ? "btn" : "btn-secondary"}
+                                            style={{ fontSize: '0.7rem', padding: '0.4rem' }}
+                                            onClick={() => handleUpdateField(i, { bold: !f.bold })}
+                                        >
+                                            BOLD
+                                        </button>
+                                        
+                                        <button 
+                                            className={f.shrinkToFit ? "btn" : "btn-secondary"}
+                                            style={{ fontSize: '0.7rem', padding: '0.4rem' }}
+                                            onClick={() => handleUpdateField(i, { shrinkToFit: !f.shrinkToFit })}
+                                        >
+                                            SHRINK
+                                        </button>
+
+                                        <div style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
+                                            <input 
+                                                type="checkbox" 
+                                                id={`multi-${i}`} 
+                                                checked={f.isMultiLine} 
+                                                onChange={e => handleUpdateField(i, { isMultiLine: e.target.checked })} 
+                                            />
+                                            <label htmlFor={`multi-${i}`} style={{ fontSize: '0.75rem', cursor: 'pointer' }}>Multi-line Support</label>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            ))}
+                        </div>
                       </div>
                     )}
                   </div>

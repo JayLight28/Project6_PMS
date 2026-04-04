@@ -7,6 +7,7 @@ import fs from 'fs';
 import { initDatabase } from './db_init.js';
 import pkg from '../shared/sync_util.js';
 const { exportSyncPack, importSyncPack, exportTemplatePack, exportVesselSyncPack } = pkg;
+import { syncTemplateStyle } from './template_sync.js';
 
 import multer from 'multer';
 
@@ -171,6 +172,33 @@ app.put('/api/sms/templates/:id', (req, res) => {
       res.json({ success: true });
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
+
+// 2.1 Sync Template Styling to File
+app.post('/api/sms/templates/:id/sync-style', async (req, res) => {
+    const { fields_json } = req.body;
+    try {
+        const tplId = req.params.id;
+        const tpl = db.prepare('SELECT * FROM templates WHERE id = ?').get(tplId);
+        if (!tpl) return res.status(404).json({ error: 'Template not found' });
+
+        const absolutePath = path.join(__dirname, tpl.file_path);
+        if (!fs.existsSync(absolutePath)) return res.status(404).json({ error: 'Physical file not found' });
+
+        const fields = typeof fields_json === 'string' ? JSON.parse(fields_json) : fields_json;
+        await syncTemplateStyle(absolutePath, fields);
+
+        // Update DB too
+        db.prepare('UPDATE templates SET fields_json = ? WHERE id = ?')
+          .run(JSON.stringify(fields), tplId);
+
+        logAction(null, 'SMS_TPL_SYNC_STYLE', `Synced style to file: ${tpl.name}`);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 
 app.delete('/api/sms/templates/:id', (req, res) => {
   try {

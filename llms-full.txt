@@ -1,4 +1,4 @@
-# Project6_PMS (Prism) — Detailed AI Context
+# Project6_PMS (Prism) — Detailed AI Context (v1.1.0)
 
 This document provides deep context for AI agents working on Project6_PMS.
 
@@ -19,9 +19,11 @@ This document provides deep context for AI agents working on Project6_PMS.
 | Main Dashboard | `mother/src/App.tsx` | `App` Component (L25) |
 | Vessel Management| `mother/src/App.tsx` | `handleSelectVessel` (L60) |
 | Fleet Registry | `mother/server.js` | `GET /api/fleet` (L315) |
-| Global PMS | `mother/server.js` | `GET /api/pms/items` (L265) |
-| SMS Templates | `mother/server.js` | `GET /api/sms/templates` (L151) |
-| Audit Logs | `mother/server.js` | `GET /api/logs/global` (L429) |
+| Global PMS | `mother/server.js` | `GET /api/pms/items` (L293) |
+| SMS Templates | `mother/server.js` | `GET /api/sms/templates` (L152) |
+| Form Styling | `mother/template_sync.js` | Update .docx/.xlsx styling |
+| Doc Filling | `shared/doc_generator.js` | AI-assisted font shrinking |
+| Audit Logs | `mother/server.js` | `GET /api/logs/global` (L457) |
 
 ### Child Vessel (`/child`)
 | Feature | Entry Point | Purpose |
@@ -42,9 +44,9 @@ Key Tables:
 
 ## 🎨 UI Style System
 
-- **Glassmorphism**: Defined in `mother/src/index.css`.
+- **Glassmorphism**: Defined in `shared/styles/global.css`.
 - **Icons**: Always use `lucide-react`.
-- **Tokens**: `--glass-bg`, `--glass-border`, `--primary-accent`.
+- **Tokens**: HSL-based (e.g., `hsl(199, 94%, 60%)`).
 
 ## ⚙️ Standardized Harness Documentation
 All AI agents **must** maintain these files in `docs_canonical/`:

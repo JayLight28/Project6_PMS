@@ -183,6 +183,15 @@ const exportTemplatePack = async (db, targetPath) => {
         archive.pipe(output);
         archive.file(manifestPath, { name: 'template_manifest.json' });
         archive.file(metaPath, { name: 'template_meta.json' });
+        
+        // Add physical files
+        for (const tpl of templates) {
+            const absPath = path.resolve(__dirname, '../mother', tpl.file_path);
+            if (fs.existsSync(absPath)) {
+                archive.file(absPath, { name: `files/${tpl.file_path.split('/').pop()}` });
+            }
+        }
+        
         archive.finalize();
     });
 
@@ -242,6 +251,21 @@ const importTemplatePack = async (db, packPath) => {
             insertItem.run(item.id, item.category_id, item.name, item.description, item.interval_months, item.linked_template_id, item.requires_cert);
         }
     })();
+
+    // 4. Extract physical files
+    const uploadDir = path.join(path.dirname(db.name), 'uploads');
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+    for (const file of directory.files) {
+        if (file.path.startsWith('files/')) {
+            const fileName = file.path.split('/').pop();
+            const destPath = path.join(uploadDir, fileName);
+            const content = await file.buffer();
+            fs.writeFileSync(destPath, content);
+        }
+    }
+
+    return data;
 
     return data;
 };
