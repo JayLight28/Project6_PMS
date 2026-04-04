@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Layout from '@shared/components/Layout/Layout';
 import { 
   Plus, 
   Search, 
@@ -14,11 +15,12 @@ import {
   ChevronRight,
   Anchor,
   User as UserIcon,
-  Lock
+  Lock,
+  Database
 } from 'lucide-react';
-import Layout from './components/Layout/Layout';
 import SMSModule from './modules/sms/SMSModule';
 import PMSModule from './modules/pms/PMSModule';
+
 
 interface User {
   id: number;
@@ -135,8 +137,24 @@ function App() {
     );
   }
 
+  const menuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'sms', label: 'SMS Documents', icon: FileText },
+    { id: 'pms', label: 'PMS Maintenance', icon: Database },
+    { id: 'sync', label: 'Sync Center', icon: ShieldCheck },
+    { id: 'settings', label: 'Settings', icon: Settings },
+  ];
+
   return (
-    <Layout currentView={view} setView={setView} user={user} onLogout={handleLogout}>
+    <Layout 
+      mode="child"
+      currentView={view} 
+      setView={setView} 
+      user={user} 
+      onLogout={handleLogout}
+      menuItems={menuItems}
+    >
+
       {/* 1. Dashboard View */}
       {view === 'dashboard' && (
         <div className="fade-in">

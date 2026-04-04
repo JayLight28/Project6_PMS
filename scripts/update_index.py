@@ -16,6 +16,8 @@ ROOT = Path(__file__).resolve().parent.parent  # project root
 TARGET_FILES = [
     ("mother/src/App.tsx", "tsx"),
     ("mother/server.js",  "js_express"),
+    ("child/src/App.tsx",  "tsx"),
+    ("child/server.js",   "js_express"),
 ]
 # ───────────────────────────────────────────────────────────────────────────
 
@@ -24,7 +26,7 @@ def scan_tsx_ts(filepath: Path) -> list[tuple[str, int]]:
     results = []
     # Match: function Name(...) or const handleName = (...)
     pattern = re.compile(
-        r'^\s{0,4}(?:export\s+)?(?:async\s+)?(?:function\s+(\w+)|const\s+(fetch\w+|handle\w+|load\w+|on[A-Z]\w+|get[A-Z]\w+)\s*=)'
+        r'^\s{0,4}(?:export\s+)?(?:async\s+)?(?:function\s+(\w+)|const\s+(fetch\w+|handle\w+|load\w+|on[A-Z]\w+|get[A-Z]\w+|set[A-Z]\w+)\s*=)'
     )
     for i, line in enumerate(filepath.read_text(encoding="utf-8").splitlines(), 1):
         m = pattern.match(line)
@@ -39,7 +41,7 @@ def scan_js_express(filepath: Path) -> list[tuple[str, str, int]]:
     results = []
     for i, line in enumerate(filepath.read_text(encoding="utf-8").splitlines(), 1):
         # Match: app.get('/api/fleet', (req, res) => {
-        m = re.match(r"(?:app)\.(get|post|put|delete|patch)\(['\"]([^'\"]+)", line)
+        m = re.match(r"(?:app|router)\.(get|post|put|delete|patch)\(['\"]([^'\"]+)", line)
         if m:
             results.append((f"{m.group(1).upper()} {m.group(2)}", i))
     return results
@@ -56,10 +58,12 @@ def build_fn_table(entries: list[tuple[str, int]]) -> str:
     return "\n".join(rows)
 
 def build_route_table(entries: list[tuple[str, int]]) -> str:
-    rows = ["| Route | Method | Line |", "|-------|--------|------|"]
+    rows = ["| Route / Method | Handler Function | Line |", "|----------------|-----------------|------|"]
     for route_with_method, line in entries:
         method, route = route_with_method.split(" ", 1)
-        rows.append(f"| `{route}` | {method} | {line} |")
+        # We don't easily have the function name for simple Express routes without more complex parsing,
+        # so we'll use a placeholder or the method itself for now.
+        rows.append(f"| `{method} {route}` | → | {line} |")
     return "\n".join(rows)
 
 def update_repo_map():
@@ -97,13 +101,13 @@ def update_repo_map():
         new_content = re.sub(pattern, block, content, flags=re.DOTALL)
 
         if new_content == content:
-            # Try matching by filename only if relative path didn't match (for backward compatibility)
+            # Fallback: Match by filename only
             pattern = rf"## {re.escape(filename)} {kind}[^\n]*\n.*?(?=\n## |\Z)"
             new_content = re.sub(pattern, block, content, flags=re.DOTALL)
             
             if new_content == content:
                 print(f"NOTE: No existing section for '{rel_path} {kind}' in REPO_MAP.md — appending")
-                content += f"\n{block}"
+                content = content.rstrip() + f"\n\n{block}"
             else:
                  content = new_content
         else:

@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react';
+import Layout from '@shared/components/Layout/Layout';
 import { 
   Search,
+  BarChart3,
+  FileStack,
+  Wrench,
+  RefreshCw,
   Anchor,
   Activity,
   AlertCircle
 } from 'lucide-react';
-import Layout from './components/Layout/Layout';
+
 import SMSModule from './modules/sms/SMSModule';
+
 import PMSModule from './modules/pms/PMSModule';
 
 // --- Types ---
@@ -98,15 +104,33 @@ function App() {
     }
   };
 
+  const mainModules = [
+    { id: 'dashboard', label: 'Fleet Overview', icon: BarChart3 },
+    { id: 'sms', label: 'SMS Center', icon: FileStack },
+    { id: 'pms', label: 'PMS Master', icon: Wrench },
+    { id: 'sync', label: 'Sync Console', icon: RefreshCw },
+  ];
+
+  const viewTitleMap: Record<string, string> = {
+    dashboard: 'Fleet Overview',
+    sms: 'SMS Master Admin',
+    pms: 'Global PMS Master',
+    sync: 'Data Sync Console'
+  };
+
   return (
     <Layout 
+      mode="mother"
       currentView={view} 
       setView={setView} 
       selectedVessel={selectedVessel}
       onSelectVessel={handleSelectVessel}
       vessels={vessels}
       onAddVessel={() => setIsModalOpen(true)}
+      mainModules={mainModules}
+      viewTitleMap={viewTitleMap}
     >
+
       {/* 1. Global Fleet Dashboard */}
       {!selectedVessel && view === 'dashboard' && (
         <div className="fade-in">

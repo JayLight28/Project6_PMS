@@ -1,4 +1,4 @@
-# 🚢 Integrated Maritime Management System — PROJECT6_PMS (v1.0.1) Detailed Specification
+# 🚢 Integrated Maritime Management System — PROJECT6_PMS (v1.0.2) Detailed Specification
 
 This document provides the comprehensive technical and functional requirements for the SMS and PMS integrated platform.
 

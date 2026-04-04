@@ -1,43 +1,6 @@
-:root {
-  --primary: #0f172a;
-  --secondary: #1e293b;
-  --accent: #38bdf8;
-  --accent-glow: rgba(56, 189, 248, 0.3);
-  --text: #f8fafc;
-  --text-dim: #94a3b8;
-  --bg: #020617;
-  --card-bg: rgba(30, 41, 59, 0.4);
-  --border: rgba(255, 255, 255, 0.1);
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --glass: rgba(15, 23, 42, 0.6);
-  --sidebar-w: 280px;
-  --header-h: 80px;
-  --radius: 16px;
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+@import "@shared/styles/global.css";
 
-* { 
-  margin: 0; 
-  padding: 0; 
-  box-sizing: border-box; 
-  -webkit-font-smoothing: antialiased;
-}
-
-body { 
-  font-family: 'Inter', system-ui, sans-serif; 
-  background: radial-gradient(circle at top right, #1e293b, #020617);
-  color: var(--text); 
-  height: 100vh; 
-  overflow: hidden; 
-}
-
-h1, h2, h3, h4 { 
-  font-family: 'Outfit', sans-serif; 
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
+/* Child Specific Styles */
 
 .app-shell { 
   display: flex; 
@@ -46,7 +9,7 @@ h1, h2, h3, h4 {
   background: var(--bg);
 }
 
-/* Sidebar Styling */
+/* Sidebar Specific (Child includes User/Role info) */
 .sidebar-wrapper { 
   width: var(--sidebar-w); 
   height: 100%;
@@ -106,7 +69,7 @@ h1, h2, h3, h4 {
   box-shadow: 0 4px 15px var(--accent-glow);
 }
 
-/* Content Area */
+/* Content Layout */
 .content-area { 
   flex: 1; 
   display: flex;
@@ -121,94 +84,3 @@ h1, h2, h3, h4 {
   overflow-y: auto;
   scroll-behavior: smooth;
 }
-
-/* Glass Card */
-.glass-card { 
-  background: var(--card-bg); 
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border); 
-  border-radius: 20px; 
-  padding: 1.5rem; 
-  transition: var(--transition); 
-}
-
-.glass-card:hover { 
-  border-color: rgba(56, 189, 248, 0.4);
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
-}
-
-.btn { 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: var(--accent); 
-  border: none; 
-  padding: 0.75rem 1.5rem; 
-  border-radius: var(--radius); 
-  font-weight: 700; 
-  cursor: pointer; 
-  transition: var(--transition); 
-  color: var(--primary); 
-}
-
-.btn:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.1);
-}
-
-.btn-secondary { 
-  background: rgba(255, 255, 255, 0.05); 
-  color: var(--text); 
-  border: 1px solid var(--border); 
-}
-
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-/* Forms & Tables */
-input, textarea { 
-  width: 100%; 
-  background: rgba(255, 255, 255, 0.03); 
-  border: 1px solid var(--border); 
-  padding: 0.875rem 1.125rem; 
-  border-radius: var(--radius); 
-  color: var(--text); 
-  outline: none; 
-  transition: var(--transition);
-}
-
-input:focus {
-  border-color: var(--accent);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.table-glass { 
-  width: 100%;
-  border-collapse: separate; 
-  border-spacing: 0;
-}
-
-.table-glass th { 
-  padding: 1.25rem 1rem; 
-  text-align: left; 
-  color: var(--text-dim); 
-  font-size: 0.75rem; 
-  text-transform: uppercase; 
-  letter-spacing: 0.1em;
-  font-weight: 700;
-  border-bottom: 1px solid var(--border);
-}
-
-.table-glass td { 
-  padding: 1.25rem 1rem; 
-  border-bottom: 1px solid var(--border);
-  font-size: 0.9375rem;
-}
-
-/* Animations */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.fade-in { animation: fadeIn 0.4s ease-out forwards; }
-
