@@ -1,4 +1,4 @@
-# Project6_PMS (Prism) — Maritime Management System
+# Project6_PMS (Prism) — Maritime Management System (v1.2.0)
 > **Hierarchical PMS/SMS System** for Global Fleet Management (Mother HQ) and Vessel Operations (Child).
 
 ## 🚀 Overview
@@ -25,7 +25,7 @@ This repository is optimized for AI-guided development consistent with the [`awe
 - **[`.cursorrules`](./.cursorrules)**: Tailored rules for Cursor AI.
 - **[`CLAUDE.md`](./CLAUDE.md)**: Token efficiency and minimalist output rules.
 - **[`llms.txt`](./llms.txt)** & **[`llms-full.txt`](./llms-full.txt)**: Machine-readable documentation for LLM agents.
-- **[`ANTIGRAVITY.md`](./ANTIGRAVITY.md)**: Jay's Standing Orders and Hard Rules.
+- **[`GEMINI.md`](./GEMINI.md)**: Project-specific standing orders and hard rules (v1.1.0).
 
 ## 📜 Documentation (Harness Architecture)
 Always refer to the following canonical documents before making changes:
@@ -53,3 +53,6 @@ node server.js
 
 ---
 **Maintained by Jay** | *Coding on Mac, Execution on Windows*
+
+## Changelog
+- v1.2.0: Refactored REPO_MAP, removed legacy docs (AGENT_MASTER_GUIDE, ANTIGRAVITY, IMPLEMENTATION_PLAN), updated PMS/SMS modules and BulkUploadModal

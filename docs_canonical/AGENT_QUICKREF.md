@@ -1,4 +1,4 @@
-# AGENT QUICK REFERENCE — Project6_PMS (v1.0.2)
+# AGENT QUICK REFERENCE — Project6_PMS (v1.1.0)
 
 > Read this first. Jump directly to line numbers. Do not read full files.
 

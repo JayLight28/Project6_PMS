@@ -1,4 +1,4 @@
-# WORKFLOWS — PROJECT6_PMS (v1.0.2)
+# WORKFLOWS — PROJECT6_PMS (v1.1.0)
 <!-- Update on /dock: only if build/deploy process changed. Skip otherwise. -->
 
 ## Development Lifecycle

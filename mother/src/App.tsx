@@ -106,15 +106,15 @@ function App() {
 
   const mainModules = [
     { id: 'dashboard', label: 'Fleet Overview', icon: BarChart3 },
-    { id: 'sms', label: 'SMS Center', icon: FileStack },
-    { id: 'pms', label: 'PMS Master', icon: Wrench },
+    { id: 'sms', label: 'SMS', icon: FileStack },
+    { id: 'pms', label: 'PMS', icon: Wrench },
     { id: 'sync', label: 'Sync Console', icon: RefreshCw },
   ];
 
   const viewTitleMap: Record<string, string> = {
     dashboard: 'Fleet Overview',
-    sms: 'SMS Master Admin',
-    pms: 'Global PMS Master',
+    sms: 'SMS Admin',
+    pms: 'PMS Admin',
     sync: 'Data Sync Console'
   };
 

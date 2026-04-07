@@ -1,4 +1,4 @@
-# STYLEGUIDE — PROJECT6_PMS (v1.0.2)
+# STYLEGUIDE — PROJECT6_PMS (v1.1.0)
 <!-- Update on /dock: only if a new convention was introduced. Skip otherwise. -->
 
 ## UI Design Tokens (Glassmorphism)

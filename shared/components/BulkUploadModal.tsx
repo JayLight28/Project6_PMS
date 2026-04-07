@@ -145,7 +145,7 @@ const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClose, file
               Smart Bulk Upload ({type.toUpperCase()})
             </h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)', marginTop: '0.25rem' }}>
-              Review and customize naming recognition before saving to database.
+              Folder structure will become SMS category tree. Files inside become document templates.
             </p>
           </div>
           <button onClick={onClose} className="btn-icon"><X size={24} /></button>

@@ -74,15 +74,17 @@ const SMSModule: React.FC = () => {
       });
 
       templates.forEach((tpl: any) => {
+        let parsedFields: any[] = [];
+        try { parsedFields = tpl.fields_json ? JSON.parse(tpl.fields_json) : []; } catch { parsedFields = []; }
         const node: TreeNode = {
           id: `tpl-${tpl.id}`,
           name: tpl.name,
           type: 'file',
           level: 0,
-          itemData: { 
-            ...tpl, 
-            isParsed: tpl.fields_json && JSON.parse(tpl.fields_json).length > 0, 
-            parsedFields: tpl.fields_json ? (typeof tpl.fields_json === 'string' ? JSON.parse(tpl.fields_json) : tpl.fields_json) : [] 
+          itemData: {
+            ...tpl,
+            isParsed: parsedFields.length > 0,
+            parsedFields
           }
         };
         if (tpl.category_id && map[tpl.category_id]) {
@@ -353,7 +355,7 @@ const SMSModule: React.FC = () => {
         }}>
           {!isNavCollapsed && (
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}>
-              <Settings size={18} style={{ color: 'var(--accent)' }} /> SMS Category Admin
+              <Settings size={18} style={{ color: 'var(--accent)' }} /> SMS Categories
             </h3>
           )}
           <div style={{ display: 'flex', flexDirection: isNavCollapsed ? 'column' : 'row', gap: '0.25rem' }}>
@@ -399,6 +401,14 @@ const SMSModule: React.FC = () => {
       </div>
 
       <div className="glass-card" style={{ flex: 1, padding: 'var(--gap-lg)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} />
+        <input
+          type="file"
+          ref={folderInputRef}
+          style={{ display: 'none' }}
+          {...({ webkitdirectory: "", directory: "" } as any)}
+          onChange={handleBulkFolderChange}
+        />
         {selectedNode ? (
           <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--gap-lg)' }}>
@@ -447,14 +457,6 @@ const SMSModule: React.FC = () => {
                 >
                   <Zap size={18} /> Push to All Ships
                 </button>
-                <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} />
-                <input 
-                    type="file" 
-                    ref={folderInputRef} 
-                    style={{ display: 'none' }} 
-                    {...({ webkitdirectory: "", directory: "" } as any)} 
-                    onChange={handleBulkFolderChange} 
-                />
               </div>
             </div>
 

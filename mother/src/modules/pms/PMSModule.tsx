@@ -210,7 +210,7 @@ const PMSModule: React.FC = () => {
           }}>
             {!isNavCollapsed && (
               <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}>
-                <Settings size={18} style={{ color: 'var(--accent)' }} /> Global PMS Admin
+                <Settings size={18} style={{ color: 'var(--accent)' }} /> PMS Categories
               </h3>
             )}
             <div style={{ display: 'flex', flexDirection: isNavCollapsed ? 'column' : 'row', gap: '0.25rem' }}>
@@ -255,6 +255,13 @@ const PMSModule: React.FC = () => {
 
         {/* Main Panel: Node Editor */}
         <div className="glass-card" style={{ flex: 1, padding: 'var(--gap-lg)', display: 'flex', flexDirection: 'column' }}>
+          <input
+            type="file"
+            ref={folderInputRef}
+            style={{ display: 'none' }}
+            {...({ webkitdirectory: "", directory: "" } as any)}
+            onChange={handleBulkFolderChange}
+          />
           {selectedNode ? (
             <div className="fade-in">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--gap-lg)' }}>
@@ -265,8 +272,8 @@ const PMSModule: React.FC = () => {
                   <h1 style={{ fontSize: '2.5rem', marginTop: '0.5rem' }}>{selectedNode.name}</h1>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                  <button 
-                    className="btn-icon btn-danger" 
+                  <button
+                    className="btn-icon btn-danger"
                     title="Delete Item"
                     onClick={() => handleDeleteCategory(selectedNode!)}
                   >
@@ -276,8 +283,8 @@ const PMSModule: React.FC = () => {
                     <Edit2 size={18} /> Edit Label
                   </button>
                   <div style={{ width: '1px', height: '24px', background: 'var(--border)', margin: '0 0.5rem' }} />
-                  <button 
-                    className="btn-secondary" 
+                  <button
+                    className="btn-secondary"
                     onClick={async () => {
                       try {
                         const res = await fetch('http://localhost:3001/api/sync/push-all', { method: 'POST' });
@@ -289,13 +296,6 @@ const PMSModule: React.FC = () => {
                   </button>
                 </div>
               </div>
-              <input 
-                type="file" 
-                ref={folderInputRef} 
-                style={{ display: 'none' }} 
-                {...({ webkitdirectory: "", directory: "" } as any)} 
-                onChange={handleBulkFolderChange} 
-              />
 
               <div style={{ marginTop: '1.5rem' }}>
                 <h3>Maintenance Schedule for this Item</h3>

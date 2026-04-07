@@ -1,4 +1,4 @@
-# CLAUDE.md — Project6_PMS (v1.0.2)
+# CLAUDE.md — Project6_PMS (v1.2.0)
 > This file is Claude's primary reference. Reading this alone covers 80% of tasks.
 
 ## 1. HARD RULES (Never Violate)
