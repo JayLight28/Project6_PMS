@@ -389,7 +389,7 @@ const SMSModule: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingRight: isNavCollapsed ? '0' : '0.5rem' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingRight: isNavCollapsed ? '0' : '0.25rem', paddingBottom: '0.5rem' }}>
           <TreeNavigator 
             nodes={tree} 
             onSelect={setSelectedNode} 

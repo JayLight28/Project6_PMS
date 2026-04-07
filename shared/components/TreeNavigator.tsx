@@ -40,7 +40,7 @@ const TreeItem: React.FC<{
   isAdmin?: boolean;
   isCollapsed?: boolean;
 }> = ({ node, onSelect, selectedId, onAdd, onEdit, onDelete, isAdmin, isCollapsed }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const isSelected = selectedId === node.id;
   const hasChildren = node.children && node.children.length > 0;
@@ -85,8 +85,8 @@ const TreeItem: React.FC<{
         {node.type === 'folder' ? <Folder size={isCollapsed ? 18 : 18} /> : <FileText size={isCollapsed ? 18 : 18} />}
         
         {!isCollapsed ? (
-          <span style={{ 
-            fontSize: '0.9rem', 
+          <span style={{
+            fontSize: '0.9rem',
             fontWeight: node.type === 'folder' ? 600 : 400,
             flex: 1,
             whiteSpace: 'nowrap',
@@ -94,6 +94,20 @@ const TreeItem: React.FC<{
             textOverflow: 'ellipsis'
           }}>
             {node.name}
+            {node.type === 'folder' && node.children && node.children.length > 0 && (
+              <span style={{
+                marginLeft: '0.4rem',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                color: 'var(--text-dim)',
+                background: 'rgba(255,255,255,0.08)',
+                borderRadius: '10px',
+                padding: '0.05rem 0.4rem',
+                verticalAlign: 'middle'
+              }}>
+                {node.children.length}
+              </span>
+            )}
           </span>
         ) : (
           <span style={{ 

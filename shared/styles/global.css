@@ -166,6 +166,13 @@ input:focus, select:focus, textarea:focus {
   font-size: 0.9375rem;
 }
 
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(56,189,248,0.4); }
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
+
 /* Common Animations */
 @keyframes fadeIn { 
   from { opacity: 0; transform: translateY(10px); } 
