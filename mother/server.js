@@ -122,18 +122,21 @@ const collectCategoryIds = (rootId) => {
     return ids;
 };
 
-// Delete a category and all its descendants + linked rows in a transaction
-const deleteCategoryTree = db.transaction((rootId) => {
+// Delete a category and all its descendants + linked rows
+const deleteCategoryTree = (rootId) => {
     const ids = collectCategoryIds(rootId);
     const placeholders = ids.map(() => '?').join(',');
-    db.prepare(`UPDATE templates SET category_id = NULL WHERE category_id IN (${placeholders})`).run(...ids);
-    db.prepare(`UPDATE maintenance_items SET category_id = NULL WHERE category_id IN (${placeholders})`).run(...ids);
-    // Delete children first (deepest first) then root
-    for (const id of ids.slice(1).reverse()) {
-        db.prepare('DELETE FROM categories WHERE id = ?').run(id);
+    db.pragma('foreign_keys = OFF');
+    try {
+        db.transaction(() => {
+            db.prepare(`UPDATE templates SET category_id = NULL WHERE category_id IN (${placeholders})`).run(...ids);
+            db.prepare(`UPDATE maintenance_items SET category_id = NULL WHERE category_id IN (${placeholders})`).run(...ids);
+            db.prepare(`DELETE FROM categories WHERE id IN (${placeholders})`).run(...ids);
+        })();
+    } finally {
+        db.pragma('foreign_keys = ON');
     }
-    db.prepare('DELETE FROM categories WHERE id = ?').run(rootId);
-});
+};
 
 // --- SMS Admin API ---
 
