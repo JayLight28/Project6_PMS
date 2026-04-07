@@ -22,9 +22,9 @@ const Header: React.FC<HeaderProps> = ({
   vesselName 
 }) => {
   return (
-    <header style={{ 
-      height: 'var(--header-h)', 
-      padding: mode === 'mother' ? '0 1.25rem' : '0 2.5rem', 
+    <header style={{
+      height: 'var(--header-h)',
+      padding: mode === 'mother' ? '0 1rem' : '0 1.5rem',
       display: 'flex', 
       alignItems: 'center', 
       justifyContent: 'space-between',
@@ -41,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({
         >
           <Menu size={mode === 'mother' ? 18 : 20} />
         </button>
-        <h1 style={{ fontSize: '1.75rem', textTransform: 'capitalize' }}>{title}</h1>
+        <h1 style={{ fontSize: '1.25rem', textTransform: 'capitalize' }}>{title}</h1>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>

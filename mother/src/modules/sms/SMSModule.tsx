@@ -35,6 +35,10 @@ const SMSModule: React.FC = () => {
   const [bulkFiles, setBulkFiles] = useState<FileList | null>(null);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
 
+  const [previewData, setPreviewData] = useState<any>(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [activeSheetIdx, setActiveSheetIdx] = useState(0);
+
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
     mode: 'add' | 'edit';
@@ -113,6 +117,25 @@ const SMSModule: React.FC = () => {
   };
 
   useEffect(() => { fetchHierarchy(); }, []);
+
+  const loadPreview = async (node: TreeNode) => {
+    if (node.type !== 'file' || typeof node.id !== 'string') return;
+    const tplId = node.id.split('-')[1];
+    setIsLoadingPreview(true);
+    setPreviewData(null);
+    setActiveSheetIdx(0);
+    try {
+      const res = await fetch(`${API_BASE}/templates/${tplId}/preview`);
+      const data = await res.json();
+      setPreviewData(data);
+    } catch { setPreviewData(null); }
+    setIsLoadingPreview(false);
+  };
+
+  const handleSelectNode = (node: TreeNode) => {
+    setSelectedNode(node);
+    loadPreview(node);
+  };
 
   const handleAddCategory = (parentNode: TreeNode | null) => {
     setModalConfig({
@@ -240,10 +263,22 @@ const SMSModule: React.FC = () => {
     setIsBulkModalOpen(true);
   };
 
+  const selectedNodeRef = useRef<TreeNode | null>(null);
+  selectedNodeRef.current = selectedNode;
+
   const handleRunAutoParser = async () => {
-    if (!selectedNode || typeof selectedNode.id !== 'string') return;
+    const node = selectedNodeRef.current;
+    if (!node || typeof node.id !== 'string') return;
     setIsParsing(true);
     setParsingStep(0);
+
+    const mockFields = [
+      { field: 'Vessel Name', value: 'MV PACIFIC GLORY', confidence: '98%', area: 'Top-Right' },
+      { field: 'IMO Number', value: '9123456', confidence: '99%', area: 'Header Block' },
+      { field: 'Inspection Date', value: '2026-04-01', confidence: '95%', area: 'Center Main' },
+      { field: 'Inspector Name', value: 'Capt. Smith', confidence: '88%', area: 'Footer Signature' },
+      { field: 'Next Due', value: '2026-10-01', confidence: '92%', area: 'Clause 4.2' }
+    ];
 
     let step = 0;
     const interval = setInterval(async () => {
@@ -252,39 +287,18 @@ const SMSModule: React.FC = () => {
         setParsingStep(step);
       } else {
         clearInterval(interval);
-        const mockFields = [
-          { field: 'Vessel Name', value: 'MV PACIFIC GLORY', confidence: '98%', area: 'Top-Right' },
-          { field: 'IMO Number', value: '9123456', confidence: '99%', area: 'Header Block' },
-          { field: 'Inspection Date', value: '2026-04-01', confidence: '95%', area: 'Center Main' },
-          { field: 'Inspector Name', value: 'Capt. Smith', confidence: '88%', area: 'Footer Signature' },
-          { field: 'Next Due', value: '2026-10-01', confidence: '92%', area: 'Clause 4.2' }
-        ];
-
         try {
-          const tplId = (selectedNode.id as string).split('-')[1];
+          const tplId = node.id.split('-')[1];
           await fetch(`${API_BASE}/templates/${tplId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              name: selectedNode.name, 
-              fields_json: mockFields 
-            })
+            body: JSON.stringify({ name: node.name, fields_json: mockFields })
           });
           await fetchHierarchy();
-          
-          const resTpls = await fetch(`${API_BASE}/templates`);
-          const tpls = await resTpls.json();
-          const updated = tpls.find((t: any) => `tpl-${t.id}` === selectedNode.id);
-          if (updated) {
-            setSelectedNode({
-              ...selectedNode,
-              itemData: { 
-                ...updated, 
-                isParsed: true, 
-                parsedFields: mockFields 
-              }
-            });
-          }
+          setSelectedNode(prev => prev ? {
+            ...prev,
+            itemData: { ...(prev.itemData || {}), isParsed: true, parsedFields: mockFields }
+          } : prev);
         } catch (err) { console.error("Parser sync failed", err); }
         setIsParsing(false);
       }
@@ -339,7 +353,7 @@ const SMSModule: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', gap: '1rem', height: 'calc(100vh - var(--header-h) - 5rem)' }}>
+    <div style={{ display: 'flex', gap: '1rem', flex: 1, minHeight: 0 }}>
       <div className="glass-card" style={{ 
         width: isNavCollapsed ? '80px' : '350px', 
         display: 'flex', 
@@ -390,10 +404,10 @@ const SMSModule: React.FC = () => {
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', paddingRight: isNavCollapsed ? '0' : '0.25rem', paddingBottom: '0.5rem' }}>
-          <TreeNavigator 
-            nodes={tree} 
-            onSelect={setSelectedNode} 
-            selectedId={selectedNode?.id} 
+          <TreeNavigator
+            nodes={tree}
+            onSelect={handleSelectNode}
+            selectedId={selectedNode?.id}
             isAdmin={true}
             onAdd={handleAddCategory}
             onEdit={handleEditCategory}
@@ -403,7 +417,7 @@ const SMSModule: React.FC = () => {
         </div>
       </div>
 
-      <div className="glass-card" style={{ flex: 1, padding: 'var(--gap-lg)', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <div className="glass-card" style={{ flex: 1, padding: '1rem', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} />
         <input
           type="file"
@@ -414,14 +428,14 @@ const SMSModule: React.FC = () => {
         />
         {selectedNode ? (
           <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--gap-lg)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span style={{ fontSize: '0.65rem', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   {selectedNode.type === 'folder' ? 'Category / Clause' : 'Document Form'}
                 </span>
-                <h1 style={{ fontSize: '2.5rem', marginTop: '0.5rem' }}>{selectedNode.name}</h1>
+                <h2 style={{ fontSize: '1.1rem', marginTop: '0.15rem', lineHeight: 1.3 }}>{selectedNode.name}</h2>
               </div>
-              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                 <button 
                   className="btn-icon btn-danger" 
                   onClick={() => handleDeleteCategory(selectedNode!)}
@@ -487,21 +501,76 @@ const SMSModule: React.FC = () => {
             ) : (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 350px', gap: '2rem', flex: 1, minHeight: 0 }}>
-                  <div className="glass-card" style={{ padding: '1.5rem', background: 'rgba(255, 255, 255, 0.02)', overflowY: 'auto' }}>
-                    <div style={{ border: '1px solid var(--border)', borderRadius: '8px', background: 'white', position: 'relative', overflow: 'hidden', minHeight: '500px' }}>
-                      <div style={{ padding: '2rem', color: '#333', fontFamily: 'serif' }}>
-                        <h2 style={{ textAlign: 'center', borderBottom: '2px solid #333', paddingBottom: '1rem' }}>MARITIME INSPECTION FORM</h2>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                          <div style={{ border: '1px solid #ccc', padding: '0.5rem' }}>VESSEL: MV PACIFIC GLORY</div>
-                          <div style={{ border: '1px solid #ccc', padding: '0.5rem' }}>IMO NO: 9123456</div>
-                        </div>
-                        {isParsing && (
-                          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(56, 189, 248, 0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                            <div className="spin" style={{ width: '40px', height: '40px', border: '3px solid var(--accent)', borderTopColor: 'transparent', borderRadius: '50%' }}></div>
-                            <p style={{ marginTop: '1rem', color: 'var(--accent)' }}>{parsingSteps[parsingStep]}</p>
-                          </div>
-                        )}
+                  <div className="glass-card" style={{ padding: '1.5rem', background: 'rgba(255, 255, 255, 0.02)', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {/* Sheet tabs */}
+                    {previewData?.type === 'xlsx' && previewData.sheets?.length > 1 && (
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        {previewData.sheets.map((s: any, i: number) => (
+                          <button
+                            key={i}
+                            onClick={() => setActiveSheetIdx(i)}
+                            style={{
+                              padding: '0.3rem 0.75rem', fontSize: '0.75rem', borderRadius: '6px', border: 'none', cursor: 'pointer',
+                              background: i === activeSheetIdx ? 'var(--accent)' : 'rgba(255,255,255,0.08)',
+                              color: i === activeSheetIdx ? 'black' : 'var(--text-dim)',
+                              fontWeight: i === activeSheetIdx ? 700 : 400
+                            }}
+                          >{s.name}</button>
+                        ))}
                       </div>
+                    )}
+                    <div style={{ border: '1px solid var(--border)', borderRadius: '8px', background: 'white', position: 'relative', overflow: 'auto', minHeight: '500px' }}>
+                      {isLoadingPreview ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '500px', gap: '1rem' }}>
+                          <div className="spin" style={{ width: '40px', height: '40px', border: '3px solid var(--accent)', borderTopColor: 'transparent', borderRadius: '50%' }} />
+                          <p style={{ color: 'var(--accent)' }}>Loading preview...</p>
+                        </div>
+                      ) : previewData?.type === 'xlsx' ? (
+                        <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '0.78rem', color: '#222' }}>
+                          <tbody>
+                            {previewData.sheets[activeSheetIdx]?.rows.map((row: any) => (
+                              <tr key={row.rowNum}>
+                                {row.cells.map((cell: any) => (
+                                  <td
+                                    key={cell.col}
+                                    rowSpan={cell.rowSpan || 1}
+                                    colSpan={cell.colSpan || 1}
+                                    style={{
+                                      border: '1px solid #d0d0d0',
+                                      padding: '4px 8px',
+                                      whiteSpace: 'pre-wrap',
+                                      fontWeight: cell.bold ? 700 : 400,
+                                      textAlign: (cell.align as any) || 'left',
+                                      minWidth: '60px',
+                                      maxWidth: '220px',
+                                      verticalAlign: 'middle',
+                                      background: cell.bgColor
+                                        ? `#${cell.bgColor.slice(-6)}`
+                                        : 'white'
+                                    }}
+                                  >
+                                    {cell.value}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      ) : previewData?.type === 'unsupported' ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '500px', color: '#888' }}>
+                          Preview not available for this file type
+                        </div>
+                      ) : (
+                        <div style={{ padding: '2rem', color: '#333', fontFamily: 'serif' }}>
+                          <p style={{ color: '#aaa', textAlign: 'center', marginTop: '2rem' }}>Select a file to preview</p>
+                        </div>
+                      )}
+                      {isParsing && (
+                        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(56, 189, 248, 0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                          <div className="spin" style={{ width: '40px', height: '40px', border: '3px solid var(--accent)', borderTopColor: 'transparent', borderRadius: '50%' }} />
+                          <p style={{ marginTop: '1rem', color: 'var(--accent)' }}>{parsingSteps[parsingStep]}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div>

@@ -6,15 +6,15 @@
   --s-h: 215; --s-s: 32%; --s-l: 17%;
   --a-h: 199; --a-s: 94%; --a-l: 60%;
   
-  --primary: hsl(var(--p-h), var(--p-s), var(--p-l));
-  --secondary: hsl(var(--s-h), var(--s-s), var(--s-l));
+  --primary: hsl(var(--p-h), var(--p-s), 16%);
+  --secondary: hsl(var(--s-h), var(--s-s), 24%);
   --accent: hsl(var(--a-h), var(--a-s), var(--a-l));
   --accent-glow: hsla(var(--a-h), var(--a-s), var(--a-l), 0.3);
-  
+
   --text: hsl(210, 40%, 98%);
-  --text-dim: hsl(215, 25%, 65%);
-  --bg: hsl(222, 84%, 5%);
-  --card-bg: hsla(var(--s-h), var(--s-s), var(--s-l), 0.4);
+  --text-dim: hsl(215, 25%, 72%);
+  --bg: hsl(222, 47%, 10%);
+  --card-bg: hsla(var(--s-h), var(--s-s), var(--s-l), 0.55);
   --border: hsla(0, 0%, 100%, 0.1);
   
   --success: hsl(158, 84%, 40%);
@@ -22,7 +22,7 @@
   --danger: hsl(0, 84%, 60%);
   --glass: hsla(var(--p-h), var(--p-s), var(--p-l), 0.6);
   --sidebar-w: 280px;
-  --header-h: 80px;
+  --header-h: 56px;
   --radius: 16px;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   
@@ -45,9 +45,9 @@
   -webkit-font-smoothing: antialiased;
 }
 
-body { 
-  font-family: 'Inter', system-ui, sans-serif; 
-  background: radial-gradient(circle at top left, #1e293b, #020617);
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: radial-gradient(circle at top left, #253352, #0f1a2e);
   color: var(--text); 
   height: 100vh; 
   overflow: hidden; 
