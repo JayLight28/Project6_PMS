@@ -195,6 +195,80 @@ app.put('/api/sms/templates/:id', (req, res) => {
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
+// 2.0 Preview Template (parse xlsx/docx and return sheet data)
+app.get('/api/sms/templates/:id/preview', async (req, res) => {
+    try {
+        const tpl = db.prepare('SELECT * FROM templates WHERE id = ?').get(req.params.id);
+        if (!tpl) return res.status(404).json({ error: 'Template not found' });
+
+        const absolutePath = path.join(__dirname, tpl.file_path);
+        if (!fs.existsSync(absolutePath)) return res.status(404).json({ error: 'Physical file not found' });
+
+        const ext = path.extname(tpl.name).toLowerCase();
+        if (ext !== '.xlsx' && ext !== '.xls') {
+            return res.json({ type: 'unsupported', name: tpl.name });
+        }
+
+        const ExcelJS = require('exceljs');
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.readFile(absolutePath);
+
+        const MAX_ROWS = 80;
+        const MAX_COLS = 20;
+
+        const sheets = [];
+        workbook.eachSheet((sheet) => {
+            // Build merge map: key = "row,col" -> { rowSpan, colSpan } for master cell, null for slave
+            const mergeMap = {};
+            (sheet.mergeCells ? [] : []);
+            if (sheet._merges) {
+                Object.values(sheet._merges).forEach((merge) => {
+                    const { top, left, bottom, right } = merge;
+                    for (let r = top; r <= bottom; r++) {
+                        for (let c = left; c <= right; c++) {
+                            if (r === top && c === left) {
+                                mergeMap[`${r},${c}`] = { rowSpan: bottom - top + 1, colSpan: right - left + 1 };
+                            } else {
+                                mergeMap[`${r},${c}`] = null; // slave cell - skip
+                            }
+                        }
+                    }
+                });
+            }
+
+            const rows = [];
+            let maxCol = 0;
+            sheet.eachRow({ includeEmpty: true }, (row, rowNum) => {
+                if (rowNum > MAX_ROWS) return;
+                const cells = [];
+                row.eachCell({ includeEmpty: true }, (cell, colNum) => {
+                    if (colNum > MAX_COLS) return;
+                    if (colNum > maxCol) maxCol = colNum;
+                    const key = `${rowNum},${colNum}`;
+                    const merge = mergeMap[key];
+                    if (merge === null) return; // slave cell, skip
+                    cells.push({
+                        col: colNum,
+                        value: cell.text || '',
+                        bold: cell.font?.bold || false,
+                        align: cell.alignment?.horizontal || 'left',
+                        rowSpan: merge?.rowSpan || 1,
+                        colSpan: merge?.colSpan || 1,
+                        bgColor: cell.fill?.fgColor?.argb || null
+                    });
+                });
+                rows.push({ rowNum, cells });
+            });
+            sheets.push({ name: sheet.name, rows, maxCol: Math.min(maxCol, MAX_COLS) });
+        });
+
+        res.json({ type: 'xlsx', name: tpl.name, sheets });
+    } catch (err) {
+        console.error('Preview error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // 2.1 Sync Template Styling to File
 app.post('/api/sms/templates/:id/sync-style', async (req, res) => {
     const { fields_json } = req.body;

@@ -29,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({
       alignItems: 'center', 
       justifyContent: 'space-between',
       borderBottom: '1px solid var(--border)',
-      background: 'rgba(2, 6, 23, 0.5)',
+      background: 'rgba(255, 255, 255, 0.85)',
       backdropFilter: 'blur(10px)',
       zIndex: 50
     }}>

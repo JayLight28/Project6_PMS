@@ -2,25 +2,25 @@
 
 :root {
   /* HSL Design Tokens */
-  --p-h: 222; --p-s: 47%; --p-l: 11%;
-  --s-h: 215; --s-s: 32%; --s-l: 17%;
-  --a-h: 199; --a-s: 94%; --a-l: 60%;
-  
-  --primary: hsl(var(--p-h), var(--p-s), 16%);
-  --secondary: hsl(var(--s-h), var(--s-s), 24%);
-  --accent: hsl(var(--a-h), var(--a-s), var(--a-l));
-  --accent-glow: hsla(var(--a-h), var(--a-s), var(--a-l), 0.3);
+  --p-h: 220; --p-s: 20%; --p-l: 97%;
+  --s-h: 220; --s-s: 15%; --s-l: 92%;
+  --a-h: 199; --a-s: 94%; --a-l: 40%;
 
-  --text: hsl(210, 40%, 98%);
-  --text-dim: hsl(215, 25%, 72%);
-  --bg: hsl(222, 47%, 10%);
-  --card-bg: hsla(var(--s-h), var(--s-s), var(--s-l), 0.55);
-  --border: hsla(0, 0%, 100%, 0.1);
+  --primary: hsl(var(--p-h), var(--p-s), var(--p-l));
+  --secondary: hsl(var(--s-h), var(--s-s), var(--s-l));
+  --accent: hsl(var(--a-h), var(--a-s), var(--a-l));
+  --accent-glow: hsla(var(--a-h), var(--a-s), var(--a-l), 0.2);
+
+  --text: hsl(220, 20%, 10%);
+  --text-dim: hsl(220, 10%, 45%);
+  --bg: hsl(220, 20%, 94%);
+  --card-bg: hsla(0, 0%, 100%, 0.85);
+  --border: hsla(220, 15%, 70%, 0.5);
   
-  --success: hsl(158, 84%, 40%);
-  --warning: hsl(38, 92%, 50%);
-  --danger: hsl(0, 84%, 60%);
-  --glass: hsla(var(--p-h), var(--p-s), var(--p-l), 0.6);
+  --success: hsl(158, 60%, 35%);
+  --warning: hsl(38, 92%, 45%);
+  --danger: hsl(0, 70%, 50%);
+  --glass: hsla(0, 0%, 100%, 0.7);
   --sidebar-w: 280px;
   --header-h: 56px;
   --radius: 16px;
@@ -47,7 +47,7 @@
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
-  background: radial-gradient(circle at top left, #253352, #0f1a2e);
+  background: hsl(220, 20%, 94%);
   color: var(--text); 
   height: 100vh; 
   overflow: hidden; 
@@ -60,19 +60,20 @@ h1, h2, h3, h4 {
 }
 
 /* Glass UI Tokens */
-.glass-card { 
-  background: var(--card-bg); 
+.glass-card {
+  background: var(--card-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border); 
-  border-radius: 20px; 
-  padding: 1rem; 
-  transition: var(--transition); 
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1rem;
+  transition: var(--transition);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
-.glass-card:hover { 
-  border-color: rgba(56, 189, 248, 0.4);
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
+.glass-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
 }
 
 /* Base UI Components (Buttons, Forms, Tables) */
@@ -99,19 +100,23 @@ h1, h2, h3, h4 {
   box-shadow: 0 4px 15px var(--accent-glow);
 }
 
-.btn-secondary { 
+.btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.05); 
-  color: var(--text); 
-  border: 1px solid var(--border); 
-  padding: 0.75rem 1.5rem; 
-  border-radius: 12px; 
-  font-weight: 600; 
-  cursor: pointer; 
-  transition: var(--transition); 
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-secondary:hover {
+  background: rgba(0,0,0,0.08);
 }
 
 .btn-icon {
@@ -127,14 +132,14 @@ h1, h2, h3, h4 {
   transition: var(--transition);
 }
 
-input, textarea, select { 
-  width: 100%; 
-  background: rgba(255, 255, 255, 0.03); 
-  border: 1px solid var(--border); 
-  padding: 0.875rem 1.125rem; 
-  border-radius: var(--radius); 
-  color: var(--text); 
-  outline: none; 
+input, textarea, select {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--border);
+  padding: 0.875rem 1.125rem;
+  border-radius: var(--radius);
+  color: var(--text);
+  outline: none;
   transition: var(--transition);
 }
 
@@ -169,9 +174,9 @@ input:focus, select:focus, textarea:focus {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(56,189,248,0.4); }
-* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+* { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.18) transparent; }
 
 /* Common Animations */
 @keyframes fadeIn { 

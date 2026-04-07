@@ -294,11 +294,13 @@ const SMSModule: React.FC = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: node.name, fields_json: mockFields })
           });
-          await fetchHierarchy();
-          setSelectedNode(prev => prev ? {
-            ...prev,
-            itemData: { ...(prev.itemData || {}), isParsed: true, parsedFields: mockFields }
-          } : prev);
+          // Update selectedNode directly - do NOT await fetchHierarchy first
+          // fetchHierarchy rebuilds tree from DB but doesn't update selectedNode
+          setSelectedNode({
+            ...node,
+            itemData: { ...(node.itemData || {}), isParsed: true, parsedFields: mockFields }
+          });
+          fetchHierarchy(); // fire and forget to sync tree
         } catch (err) { console.error("Parser sync failed", err); }
         setIsParsing(false);
       }

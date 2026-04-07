@@ -58,14 +58,14 @@
   white-space: nowrap;
 }
 
-.nav-item:hover { 
-  background: rgba(255, 255, 255, 0.05); 
-  color: var(--text); 
+.nav-item:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text);
 }
 
-.nav-item.active { 
-  background: var(--accent); 
-  color: var(--primary);
+.nav-item.active {
+  background: var(--accent);
+  color: white;
   box-shadow: 0 4px 15px var(--accent-glow);
 }
 
@@ -98,7 +98,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(2, 6, 23, 0.8);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;

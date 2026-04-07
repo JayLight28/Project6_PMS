@@ -33,7 +33,7 @@ const seedData = () => {
         console.log("Seeded default users (master/crew).");
     }
 
-    const existingCats = db.prepare('SELECT count(*) as count FROM categories').get();
+    const existingCats = db.prepare('SELECT count(*) as count FROM categories WHERE type = "pms"').get();
     if (existingCats.count === 0) {
         const insert = db.prepare('INSERT INTO categories (name, type, is_system) VALUES (?, ?, 1)');
         insert.run('DECK MACHINERY', 'pms');
