@@ -114,6 +114,27 @@ const logAction = (userId, action, details, shipId = null) => {
       .run(userId, action, details, shipId);
 };
 
+// Recursively collect all descendant category IDs (including the root)
+const collectCategoryIds = (rootId) => {
+    const ids = [rootId];
+    const children = db.prepare('SELECT id FROM categories WHERE parent_id = ?').all(rootId);
+    for (const child of children) ids.push(...collectCategoryIds(child.id));
+    return ids;
+};
+
+// Delete a category and all its descendants + linked rows in a transaction
+const deleteCategoryTree = db.transaction((rootId) => {
+    const ids = collectCategoryIds(rootId);
+    const placeholders = ids.map(() => '?').join(',');
+    db.prepare(`UPDATE templates SET category_id = NULL WHERE category_id IN (${placeholders})`).run(...ids);
+    db.prepare(`UPDATE maintenance_items SET category_id = NULL WHERE category_id IN (${placeholders})`).run(...ids);
+    // Delete children first (deepest first) then root
+    for (const id of ids.slice(1).reverse()) {
+        db.prepare('DELETE FROM categories WHERE id = ?').run(id);
+    }
+    db.prepare('DELETE FROM categories WHERE id = ?').run(rootId);
+});
+
 // --- SMS Admin API ---
 
 // 1. Categories
@@ -145,8 +166,8 @@ app.delete('/api/sms/categories/:id', (req, res) => {
       const cat = db.prepare('SELECT is_system FROM categories WHERE id = ?').get(req.params.id);
       if (!cat) return res.status(404).json({ error: 'Category not found' });
       if (cat.is_system) return res.status(403).json({ error: 'System categories cannot be deleted' });
-      db.prepare('DELETE FROM categories WHERE id = ?').run(req.params.id);
-      logAction(null, 'SMS_CAT_DELETE', `Deleted SMS category ID: ${req.params.id}`);
+      deleteCategoryTree(req.params.id);
+      logAction(null, 'SMS_CAT_DELETE', `Deleted SMS category tree ID: ${req.params.id}`);
       res.json({ success: true });
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -290,8 +311,8 @@ app.delete('/api/pms/categories/:id', (req, res) => {
         const cat = db.prepare('SELECT is_system FROM categories WHERE id = ?').get(req.params.id);
         if (!cat) return res.status(404).json({ error: 'Category not found' });
         if (cat.is_system) return res.status(403).json({ error: 'System categories cannot be deleted' });
-        db.prepare('DELETE FROM categories WHERE id = ?').run(req.params.id);
-        logAction(null, 'PMS_CAT_DELETE', `Deleted PMS category ID: ${req.params.id}`);
+        deleteCategoryTree(req.params.id);
+        logAction(null, 'PMS_CAT_DELETE', `Deleted PMS category tree ID: ${req.params.id}`);
         res.json({ success: true });
     } catch (err) { res.status(400).json({ error: err.message }); }
 });
