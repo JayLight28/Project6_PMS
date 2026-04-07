@@ -125,13 +125,20 @@ const collectCategoryIds = (rootId) => {
 // Delete a category and all its descendants + linked rows
 const deleteCategoryTree = (rootId) => {
     const ids = collectCategoryIds(rootId);
+    console.log('[DELETE TREE] ids:', ids);
     const placeholders = ids.map(() => '?').join(',');
+    console.log('[DELETE TREE] foreign_keys before:', db.pragma('foreign_keys', { simple: true }));
     db.pragma('foreign_keys = OFF');
+    console.log('[DELETE TREE] foreign_keys after OFF:', db.pragma('foreign_keys', { simple: true }));
     try {
         db.transaction(() => {
+            console.log('[DELETE TREE] updating templates...');
             db.prepare(`UPDATE templates SET category_id = NULL WHERE category_id IN (${placeholders})`).run(...ids);
+            console.log('[DELETE TREE] updating maintenance_items...');
             db.prepare(`UPDATE maintenance_items SET category_id = NULL WHERE category_id IN (${placeholders})`).run(...ids);
+            console.log('[DELETE TREE] deleting categories...');
             db.prepare(`DELETE FROM categories WHERE id IN (${placeholders})`).run(...ids);
+            console.log('[DELETE TREE] done');
         })();
     } finally {
         db.pragma('foreign_keys = ON');
