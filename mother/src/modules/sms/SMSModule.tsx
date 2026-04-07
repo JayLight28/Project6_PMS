@@ -146,6 +146,9 @@ const SMSModule: React.FC = () => {
       if (res.ok) {
         await fetchHierarchy();
         if (selectedNode?.id === node.id) setSelectedNode(null);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete');
       }
     } catch (err) { console.error("Delete failed", err); }
   };

@@ -118,7 +118,7 @@ const logAction = (userId, action, details, shipId = null) => {
 
 // 1. Categories
 app.get('/api/sms/categories', (req, res) => {
-    res.json(db.prepare('SELECT * FROM categories WHERE type = "sms" ORDER BY sort_order, id').all());
+    res.json(db.prepare("SELECT * FROM categories WHERE type = 'sms' ORDER BY sort_order, id").all());
 });
 
 app.post('/api/sms/categories', (req, res) => {
@@ -142,6 +142,9 @@ app.put('/api/sms/categories/:id', (req, res) => {
 
 app.delete('/api/sms/categories/:id', (req, res) => {
   try {
+      const cat = db.prepare('SELECT is_system FROM categories WHERE id = ?').get(req.params.id);
+      if (!cat) return res.status(404).json({ error: 'Category not found' });
+      if (cat.is_system) return res.status(403).json({ error: 'System categories cannot be deleted' });
       db.prepare('DELETE FROM categories WHERE id = ?').run(req.params.id);
       logAction(null, 'SMS_CAT_DELETE', `Deleted SMS category ID: ${req.params.id}`);
       res.json({ success: true });
@@ -284,6 +287,9 @@ app.put('/api/pms/categories/:id', (req, res) => {
 
 app.delete('/api/pms/categories/:id', (req, res) => {
     try {
+        const cat = db.prepare('SELECT is_system FROM categories WHERE id = ?').get(req.params.id);
+        if (!cat) return res.status(404).json({ error: 'Category not found' });
+        if (cat.is_system) return res.status(403).json({ error: 'System categories cannot be deleted' });
         db.prepare('DELETE FROM categories WHERE id = ?').run(req.params.id);
         logAction(null, 'PMS_CAT_DELETE', `Deleted PMS category ID: ${req.params.id}`);
         res.json({ success: true });

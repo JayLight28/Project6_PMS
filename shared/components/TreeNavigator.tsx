@@ -66,7 +66,7 @@ const TreeItem: React.FC<{
           display: 'flex',
           alignItems: 'center',
           gap: isCollapsed ? '0.25rem' : '0.5rem',
-          padding: isCollapsed ? '0.5rem 0.25rem' : '0.1rem 0.6rem',
+          padding: isCollapsed ? '0.1rem 0.15rem' : '0.05rem 0.2rem',
           justifyContent: isCollapsed ? 'center' : 'flex-start',
           borderRadius: '8px',
           cursor: 'pointer',
@@ -193,7 +193,7 @@ const TreeItem: React.FC<{
 
 const TreeNavigator: React.FC<TreeNavigatorProps> = ({ nodes, onSelect, selectedId, onAdd, onEdit, onDelete, isAdmin, isCollapsed }) => {
   return (
-    <div className="tree-navigator" style={{ display: 'flex', flexDirection: 'column', gap: isCollapsed ? '0.5rem' : '0.15rem' }}>
+    <div className="tree-navigator" style={{ display: 'flex', flexDirection: 'column', gap: isCollapsed ? '0.02rem' : '0.02rem' }}>
 
       {nodes.map((node: TreeNode) => (
         <TreeItem 

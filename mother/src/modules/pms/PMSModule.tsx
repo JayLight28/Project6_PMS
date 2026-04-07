@@ -146,6 +146,9 @@ const PMSModule: React.FC = () => {
       if (resp.ok) {
         fetchPMSData();
         if (selectedNode?.id === node.id) setSelectedNode(null);
+      } else {
+        const data = await resp.json();
+        alert(data.error || 'Failed to delete category');
       }
     } catch (err) { console.error(err); }
   };
