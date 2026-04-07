@@ -9,7 +9,7 @@ SET NODE_ENV=development
 
 echo.
 echo  [BACKEND] Starting API Server on http://localhost:3001...
-start "Mother API" cmd /k "node server.js"
+start /b node server.js
 
 echo  [FRONTEND] Starting Vite Dev Server on port 5173...
 echo.
